@@ -1,14 +1,6 @@
 # Program creates, stores, displays and allows ontology operations 
 # on objects hierarchy. 
-# Commands:
-# create(hierarchy_name)
-# print()
-# add_class(name, super_class = None)
-# add_atr(name, type, ...)
-# add_obj(class, {atr : val})
-# save(path)
-# open(path)
-# info()
+
 import signal
 import sys
 import re
@@ -28,30 +20,48 @@ hier = object()
 class CommandHandler:
     commands_desc = dict({
         'info':         '() - prints all commands info',
-        'create':       '(hierarchy_name) - creates a new hiearchy and loads it in memory',
-        'print':        '() - prints the current hierarchy',
-        'save':         '(path) - saves hierarchy as json file',
-        'add_class':    '(name, super_class = None) - creates new class',
-        'open':         '(path) - opens exiting hierarchy (from json)'
+        'create':      '(hierarchy_name) - creates a new hiearchy and loads it in memory',
+        'print':       '() - prints the current hierarchy',
+        'add_cls':     '(name, super_class = None) - creates new class',
+        'add_atr':     '(type: str/num/link, name : value: some string/some number (floar or int)/class name or [class names]) - adds slot to slots base',
+        'inst':        '({ atr_name : atr_value }) - creates an instance of class with entered parameters',
+        'print_inst':  '() - prints all instances in hierarchy',
+        'save':        '(path) - saves hierarchy as json file',
+        'open':        '(path) - opens exiting hierarchy (from json)',
     })
     commands = commands_desc.keys()
 
     
     def handle(this, command_name, arg):
-        mes = 'Nothing happend... Intersting!'
-        if(command_name == 'info'):
+        mes = 'Nothing happend...'
+        if command_name == 'info':
             mes = this._info()
-        elif(command_name == 'create'):
+        elif command_name == 'create':
             mes = this._create(arg)
-        elif(command_name == 'print'):
+        elif command_name == 'print':
             print(hier)
             mes = "Finished printing!"
-        elif(command_name == 'save'):
+        elif command_name == 'save':
             mes = this._save(arg)
-        elif(command_name == 'add_class'):
+        elif command_name == 'add_cls':
             mes = this._add_class(arg)
-        elif(command_name == 'open'):
+        elif command_name == 'open':
             mes = this._open(arg)
+        return mes
+    
+    def handle_cls(this, cls_name, command_name, arg):
+        global hier
+        mes = 'Nothing happend...'
+
+        cls = hier.find_class(cls_name)
+        if not cls:
+            mes = 'No such class in hierarchy!'
+            return mes
+
+        if command_name == 'add_atr':
+            print('add_atr')
+        elif command_name == 'inst':
+            print('inst')
         return mes
         
     
@@ -82,6 +92,13 @@ class CommandHandler:
             hier.add_class(args[0].strip())
         return 'Added class to hiearchy!'
 
+    def _add_atr(this, cls, arg):
+        global hier
+        pass
+
+    def __inst(this, cls, arg):
+        pass
+
   
     def _print(this):
         hier.print()
@@ -99,6 +116,7 @@ class CommandHandler:
 # args : arg1, arg2, ..., argn or {... key : val ...}
 comHandler = CommandHandler()
 command_pattern = re.compile('^([A-z]*)\(([^)]*)\)$')
+clsmethod_pattern = re.compile('^([A-Za-z0-9]*).([A-z]*)\(([^)]*)\)$')
 
 # Input loop
 while True:
@@ -106,17 +124,29 @@ while True:
 
     # Parse command and parameters
     inp = inp.strip()
-    if(not inp):
+    if not inp:
         continue
     parsed_inp = command_pattern.match(inp)
-    if(not parsed_inp):
-        print('\nNon parsable command!\n')
-        continue
-
-    command = parsed_inp.group(1)
-    if(command not in comHandler.commands):
-        print('\nNo such function (write info() for functions list)\n')
+    if parsed_inp:
+        command = parsed_inp.group(1)
+        if command not in comHandler.commands:
+            print('\nNo such function (write info() for functions list)\n')
+        else:
+            res = comHandler.handle(command, parsed_inp.group(2))
+            print(res + '\n')
     else:
-        res = comHandler.handle(command, parsed_inp.group(2))
-        print(res + '\n')
+        parsed_inp = clsmethod_pattern.match(inp)
+        if not parsed_inp:
+            print('\nNot parsable command!\n')
+            continue
+        cls_name = parsed_inp.group(1)
+        command = parsed_inp.group(2)
+        arg = parsed_inp.group(3)
+        if command not in comHandler.commands:
+            print('\nNo such function (write info() for functions list)\n')
+        else:
+            res = comHandler.handle_cls(cls_name, command, arg)
+            print(res + '\n')
+
+
 

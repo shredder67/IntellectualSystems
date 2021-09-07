@@ -7,6 +7,17 @@ class HClass:
         HClass.id += 1
         this.name = this.name + str(HClass.id) if name is None else name
         this.subclasses = []
+        this.attributes = dict()
+        this.instances = []
+
+    def add_num_atr(this, num):
+        pass
+
+    def add_str_atr(this, str):
+        pass
+
+    def add_link_atr(this, *classes):
+        pass
 
 # Instance caches whole hierarchy, reads, saves and represents as string
 class Hierarchy:
@@ -18,6 +29,8 @@ class Hierarchy:
 
 
     def find_class(this, class_name):
+        if not this.root_class:
+            return None
         # Breadth first search
         queue = []
         visited = {}
@@ -54,16 +67,16 @@ class Hierarchy:
 
     def _scan_hierarchy(this, cur, shift):
         sub = ''
-        line = shift + cur.name
+        line = shift*'--' + ' ' + cur.name
         if(cur.subclasses):
             line + ':'
             sub += line + '\n'
             for subcls in cur.subclasses:
-                sub += this._scan_hierarchy(subcls, shift + '\t')
+                sub += this._scan_hierarchy(subcls, shift + 1)
         else:
             sub += line + '\n'
         return sub
 
 
     def __str__(this):
-        return this._scan_hierarchy(this.root_class, '')
+        return this._scan_hierarchy(this.root_class, 0)
