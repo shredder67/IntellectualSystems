@@ -1,15 +1,12 @@
 # Instances hold default properties (id and name) and custom, that are added on the fly
 class HClass:
-    id = -1
-    name = "Class"
-    parent = None
-    subclasses = []
-
-
+    id = 0
+    
     def __init__(this, name = None):
         this.id = HClass.id + 1
         HClass.id += 1
         this.name = this.name + str(HClass.id) if name is None else name
+        this.subclasses = []
 
 # Instance caches whole hierarchy, reads, saves and represents as string
 class Hierarchy:
@@ -47,26 +44,26 @@ class Hierarchy:
                 parent_class.subclasses.append(HClass(class_name))
             
 
-    def save(filename, path):
+    def save(this, filename, path):
         pass
 
 
-    def load(path):
+    def load(this, path):
         pass
 
 
-    def _scan_hierarchy(this, res, cur, shift):
+    def _scan_hierarchy(this, cur, shift):
+        sub = ''
         line = shift + cur.name
-        if(len(cur.subclasses) != 0):
+        if(cur.subclasses):
             line + ':'
-            res += line + '\n'
-            for sub in cur.subclasses:
-                res += this._scan_hierarchy(this, sub, shift + '\t')
+            sub += line + '\n'
+            for subcls in cur.subclasses:
+                sub += this._scan_hierarchy(subcls, shift + '\t')
         else:
-            res += line + '\n'
-        return res
+            sub += line + '\n'
+        return sub
 
 
     def __str__(this):
-        res = ''
-        return this._scan_hierarchy(res, this.root_class, '')
+        return this._scan_hierarchy(this.root_class, '')

@@ -14,28 +14,9 @@ import sys
 import re
 from hierarchy import Hierarchy
 
-class mmodes:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-def warning_print(mes):
-        print(mmodes.BOLD + mmodes.UNDERLINE + mmodes.WARNING + mes + mmodes.ENDC)
-
-
-def message_print(mes):
-        print(mmodes.BOLD + mmodes.OKBLUE + mes + mmodes.ENDC)   
-
-
 # Set up Ctrl-C handler for exiting program
 def ctrl_c_handler(sig, frame):
-    warning_print('Exiting...')
+    print('\nExiting...')
     sys.exit(0)
 
 signal.signal(signal.SIGINT, ctrl_c_handler)
@@ -46,7 +27,7 @@ hier = object()
 # Static class, stores all commands and handle functions
 class CommandHandler:
     commands_desc = dict({
-        'info':         '(path) - prints all commands info',
+        'info':         '() - prints all commands info',
         'create':       '(hierarchy_name) - creates a new hiearchy and loads it in memory',
         'print':        '() - prints the current hierarchy',
         'save':         '(path) - saves hierarchy as json file',
@@ -75,12 +56,14 @@ class CommandHandler:
         
     
     def _info(this):
-        for name,desc in this.commands_desc.items():
-            print(name + desc)
-            return ''
+        # for name,desc in this.commands_desc.items():
+        #     print(name + desc)
+        #     return ''
+        for key in this.commands_desc:
+            print(key + this.commands_desc[key])
+        return ''
 
 
-    
     def _create(this, arg):
         global hier
         hier = Hierarchy(arg)
@@ -119,7 +102,7 @@ command_pattern = re.compile('^([A-z]*)\(([^)]*)\)$')
 
 # Input loop
 while True:
-    inp = input()
+    inp = input('> ')
 
     # Parse command and parameters
     inp = inp.strip()
@@ -127,14 +110,13 @@ while True:
         continue
     parsed_inp = command_pattern.match(inp)
     if(not parsed_inp):
-        warning_print('Non parsable command!')
+        print('\nNon parsable command!\n')
         continue
 
     command = parsed_inp.group(1)
     if(command not in comHandler.commands):
-        warning_print('No such funcion (write info() for functions list)')
+        print('\nNo such function (write info() for functions list)\n')
     else:
         res = comHandler.handle(command, parsed_inp.group(2))
-        message_print(res)
+        print(res + '\n')
 
-    
