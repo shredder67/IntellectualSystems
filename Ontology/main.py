@@ -1,6 +1,11 @@
 # Program creates, stores, displays and allows ontology operations 
 # on objects hierarchy. 
 
+# TODO: 
+# ! instance creation + print
+# ! json parsing (with attributes), reading then saving
+# ! find request to hierarchy
+
 import signal
 import sys
 import re
@@ -23,11 +28,12 @@ class CommandHandler:
         'create':      '(hierarchy_name) - creates a new hiearchy and loads it in memory',
         'print':       '() - prints the current hierarchy',
         'add_cls':     '(name, super_class = None) - creates new class',
-        'add_atr':     '(type: str/num/link, name : value: some string/some number (floar or int)/class name or [class names]) - adds slot to slots base',
+        'add_atr':     '(type (String, Num, Link), name, cardinality(, val if type is link)) - adds attribute to class',
         'inst':        '({ atr_name : atr_value }) - creates an instance of class with entered parameters',
         'print_inst':  '() - prints all instances in hierarchy',
         'save':        '(path) - saves hierarchy as json file',
         'open':        '(path) - opens exiting hierarchy (from json)',
+        'find':        '(atr_name, condition) - searches through class and subclasses instances, applying condition to atr value'
     })
     commands = commands_desc.keys()
 
@@ -49,6 +55,7 @@ class CommandHandler:
             mes = this._open(arg)
         return mes
     
+
     def handle_cls(this, cls_name, command_name, arg):
         global hier
         mes = 'Nothing happend...'
@@ -59,16 +66,13 @@ class CommandHandler:
             return mes
 
         if command_name == 'add_atr':
-            print('add_atr')
+            mes = this._add_atr(cls, arg)
         elif command_name == 'inst':
-            print('inst')
+            mes = this._inst(cls, arg)
         return mes
         
     
     def _info(this):
-        # for name,desc in this.commands_desc.items():
-        #     print(name + desc)
-        #     return ''
         for key in this.commands_desc:
             print(key + this.commands_desc[key])
         return ''
@@ -92,9 +96,22 @@ class CommandHandler:
             hier.add_class(args[0].strip())
         return 'Added class to hiearchy!'
 
+
     def _add_atr(this, cls, arg):
         global hier
-        pass
+        args = list(map(str.strip, arg.split(',')))
+        res = ''
+        type = args[0]
+        if type == 'String':
+            cls.add_str_atr(args[1], args[2])
+        elif type == 'Num':
+            cls.add_num_atr(args[1], args[2])
+        elif type == 'Link':
+            cls.add_link_atr(args[1], args[3:-1])
+        else:
+            return 'No such type of arguements! Available types: String, Num, Link'
+        return 'Attribute ' + args[1] + ' added to ' + cls.name
+
 
     def __inst(this, cls, arg):
         pass

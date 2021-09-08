@@ -1,3 +1,11 @@
+import json
+
+class Link:
+
+    def __init__(this, keys):
+        this.keys = keys.copy()
+        this.values = []
+
 # Instances hold default properties (id and name) and custom, that are added on the fly
 class HClass:
     id = 0
@@ -10,14 +18,41 @@ class HClass:
         this.attributes = dict()
         this.instances = []
 
-    def add_num_atr(this, num):
-        pass
 
-    def add_str_atr(this, str):
-        pass
+    def add_num_atr(this, name, cardinality):
+        if name in this.attributes.keys():
+            return
+        if(cardinality == 'single'):
+            this.attributes[name] = ''
+        elif(cardinality == 'multiple'):
+            this.attributes[name] = []
+    
 
-    def add_link_atr(this, *classes):
-        pass
+    def add_str_atr(this, name, cardinality):
+        if name in this.attributes.keys():
+            return
+        if(cardinality == 'single'):
+            this.attributes[name] = -1
+        elif(cardinality == 'multiple'):
+            this.attributes[name] = []
+
+
+    def add_link_atr(this, name, classes):
+        if name in this.attributes.keys():
+            return
+        this.attributes[name] = Link(classes)
+
+
+    def get_atr_val(this, name):
+        if name not in this.attributes.keys():
+            return None
+        atr = this.attributes[name]
+        if(isinstance(atr, (int, float))):
+            pass
+        elif(isinstance(atr, str)):
+            pass
+        else:
+            pass
 
 # Instance caches whole hierarchy, reads, saves and represents as string
 class Hierarchy:
@@ -68,6 +103,11 @@ class Hierarchy:
     def _scan_hierarchy(this, cur, shift):
         sub = ''
         line = shift*'--' + ' ' + cur.name
+        if(cur.attributes):
+            line += '('
+            for k in cur.attributes.keys():
+                line += k + ' '
+            line[-1] = ')'
         if(cur.subclasses):
             line + ':'
             sub += line + '\n'
