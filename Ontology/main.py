@@ -18,17 +18,18 @@ def ctrl_c_handler(sig, frame):
 
 signal.signal(signal.SIGINT, ctrl_c_handler)
 
-# Hierarchy object
-hier = object()
-
 # Static class, stores all commands and handle functions
 class CommandHandler:
+
+    # Hierarchy object
+    hier = object()
+
     commands_desc = dict({
-        'info':         '() - prints all commands info',
+        'info':        '() - prints all commands info',
         'create':      '(hierarchy_name) - creates a new hiearchy and loads it in memory',
         'print':       '() - prints the current hierarchy',
         'add_cls':     '(name, super_class = None) - creates new class',
-        'add_atr':     '(type (String, Num, Link), name, cardinality(, val if type is link)) - adds attribute to class',
+        'add_atr':     '(type (String, Num, Link), name, cardinality(single, multiple)(, cls_name if type is Link)) - adds attribute to class',
         'inst':        '({ atr_name : atr_value }) - creates an instance of class with entered parameters',
         'print_inst':  '() - prints all instances in hierarchy',
         'save':        '(path) - saves hierarchy as json file',
@@ -37,30 +38,29 @@ class CommandHandler:
     })
     commands = commands_desc.keys()
 
-    
     def handle(this, command_name, arg):
         mes = 'Nothing happend...'
         if command_name == 'info':
             mes = this._info()
         elif command_name == 'create':
             mes = this._create(arg)
-        elif command_name == 'print':
-            print(hier)
-            mes = "Finished printing!"
-        elif command_name == 'save':
-            mes = this._save(arg)
         elif command_name == 'add_cls':
             mes = this._add_class(arg)
+        elif command_name == 'print':
+            mes = this._print()
+        elif command_name == 'print_inst':
+            mes = this._print_inst()
+        elif command_name == 'save':
+            mes = this._save(arg)
         elif command_name == 'open':
             mes = this._open(arg)
         return mes
     
 
     def handle_cls(this, cls_name, command_name, arg):
-        global hier
         mes = 'Nothing happend...'
 
-        cls = hier.find_class(cls_name)
+        cls = this.hier.find_class(cls_name)
         if not cls:
             mes = 'No such class in hierarchy!'
             return mes
@@ -79,46 +79,55 @@ class CommandHandler:
 
 
     def _create(this, arg):
-        global hier
-        hier = Hierarchy(arg)
-        if(hier):
+        this.hier = Hierarchy(arg)
+        if(this.hier):
             return 'Hierarchy created!'
         else:
             return 'Hierarchy wasn\'t created, smth went wrong'
 
     
     def _add_class(this, arg):
-        global hier
         args = arg.split(',')
         if(len(args) > 1):
-            hier.add_class(args[0].strip(), args[1].strip())
+            this.hier.add_class(args[0].strip(), args[1].strip())
         else:
-            hier.add_class(args[0].strip())
+            this.hier.add_class(args[0].strip())
         return 'Added class to hiearchy!'
 
 
     def _add_atr(this, cls, arg):
-        global hier
         args = list(map(str.strip, arg.split(',')))
-        res = ''
-        type = args[0]
-        if type == 'String':
-            cls.add_str_atr(args[1], args[2])
-        elif type == 'Num':
-            cls.add_num_atr(args[1], args[2])
-        elif type == 'Link':
-            cls.add_link_atr(args[1], args[3:-1])
-        else:
-            return 'No such type of arguements! Available types: String, Num, Link'
+        try:
+            res = ''
+            type = args[0]
+            if type == 'String':
+                cls.add_str_atr(args[1], args[2])
+            elif type == 'Num':
+                cls.add_num_atr(args[1], args[2])
+            elif type == 'Link':
+                cls.add_link_atr(args[1], args[3:-1])
+            else:
+                raise ValueError
+        except IndexError:
+            return 'Wrong amount of arguments!'
+        except ValueError:
+            return 'Wrong argument type!'
         return 'Attribute ' + args[1] + ' added to ' + cls.name
 
 
-    def __inst(this, cls, arg):
-        pass
+    def _inst(this, cls, arg):
+        # arg is value, value, value in defined order
+        values = list(map(str.strip, arg.split(',')))
+        cls.create_instance(values)
+        return 'Instance created!'
 
   
     def _print(this):
-        hier.print()
+        print(this.hier.to_str())
+        return ''
+
+    def _print_inst(this):
+        print(this.hier.to_str(True))
         return ''
 
     
