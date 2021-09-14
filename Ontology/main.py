@@ -9,6 +9,7 @@
 import signal
 import sys
 import re
+from os import path
 from hierarchy import Hierarchy
 
 # Set up Ctrl-C handler for exiting program
@@ -136,7 +137,11 @@ class CommandHandler:
 
     
     def _open(this, arg):
-        pass
+        if path.exists(arg):
+            this.hier.parse_from_json(arg)
+            return 'Parsed hierarchy!'
+        else:
+            return 'Wrong path!'
 
 # command(args)
 # args : arg1, arg2, ..., argn or {... key : val ...}

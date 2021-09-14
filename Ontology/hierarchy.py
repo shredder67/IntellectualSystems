@@ -18,7 +18,8 @@ class AtrType(Enum):
 # Instances hold default properties (id and name) and custom, that are added on the fly
 class HClass:
     id = 0
-    
+
+
     def __init__(this, name = None):
         this.id = HClass.id + 1
         HClass.id += 1
@@ -61,17 +62,6 @@ class HClass:
             i += 1
         this.instances.append(inst)
 
-    # def get_atr_val(this, name):
-    #     if name not in this.attributes.keys():
-    #         return None
-    #     atr = this.attributes[name]
-    #     if(isinstance(atr, (int, float))):
-    #         pass
-    #     elif(isinstance(atr, str)):
-    #         pass
-    #     else:
-    #         pass
-
 
 # Instance caches whole hierarchy, reads, saves and represents as string
 class Hierarchy:
@@ -109,14 +99,6 @@ class Hierarchy:
             parent_class = this.find_class(class_parent)
             if(parent_class):
                 parent_class.subclasses.append(HClass(class_name))
-            
-
-    def save(this, filename, path):
-        pass
-
-
-    def load(this, path):
-        pass
 
 
     def _scan_hierarchy(this, cur, shift):
@@ -136,6 +118,7 @@ class Hierarchy:
         else:
             sub += line + '\n'
         return sub
+
 
     def _scan_hierarchy_with_instances(this, cur, shift):
         sub = ''
@@ -169,3 +152,26 @@ class Hierarchy:
             return this._scan_hierarchy_with_instances(this.root_class, 0)[:-1]
         else:
             return this._scan_hierarchy(this.root_class, 0)[:-1]
+
+
+    # ? should class factory method, consturcting Hierarchy object based of reading file
+    # File structure should be following:
+    # {
+    #     "Base":
+    #     {
+    #         "name": "SomeName",
+    #         {
+    #             "Subclasses" : {
+    #                 ... (ever instanciable subclass should have "Attributes" field)
+    #             }
+    #         }
+    #     }
+    # }
+    def parse_from_json(this, filename):
+        with open("data_file.json", "r") as data:
+            hierData = json.loads(data)
+            root_name = hierData.Base.name
+            root = HClass(root_name)
+            print(hierData)
+
+

@@ -1,33 +1,9 @@
 {
-    "ВУЗ" : {
-        "Ректор": {
-            "Имя" : {
-                "type" : "String",
-                "cardinality" : "single"
-            },
-            "Зарпалата" : {
-                "type" : "num",
-                "cardinality" : "single"
-            },
-            "Подчиненный": {
-                "type" : "Link",
-                "cardinality" : "multiple",
-                "value": "Проректор" 
-            }
-        },
-        "Проректор": {
-            "Имя" : {
-                "type" : "String",
-                "cardinality" : "single"
-            },
-            "Зарпалата" : {
-                "type" : "num",
-                "cardinality" : "single"
-            }
-        },
-        "Институт" :{
-            "Кафедра": {
-                "Заведующий": {
+    "Base" : {
+        "Имя": "ВУЗ", 
+        "Subclasses":{
+            "Ректор": {
+                "Attributes": {
                     "Имя" : {
                         "type" : "String",
                         "cardinality" : "single"
@@ -35,28 +11,16 @@
                     "Зарпалата" : {
                         "type" : "num",
                         "cardinality" : "single"
-                    }
-                },
-                "Старший преподаватель": {
-                    "Имя" : {
-                        "type" : "String",
-                        "cardinality" : "single"
-                    },
-                    "Зарпалата" : {
-                        "type" : "num",
-                        "cardinality" : "single"
-                    },
-                    "Предмет": {
-                        "type" : "String",
-                        "cardinality" : "multiple"
                     },
                     "Подчиненный": {
                         "type" : "Link",
                         "cardinality" : "multiple",
-                        "value": "Преподаватель" 
+                        "value": "Проректор" 
                     }
-                },
-                "Преподаватель" : {
+                }
+            },
+            "Проректор": {
+                "Attributes": {
                     "Имя" : {
                         "type" : "String",
                         "cardinality" : "single"
@@ -64,29 +28,82 @@
                     "Зарпалата" : {
                         "type" : "num",
                         "cardinality" : "single"
-                    },
-                    "Предмет": {
-                        "type" : "String",
-                        "cardinality" : "multiple"
-                    },
-                    "Подчиненный" : {
-                        "type" : "Link",
-                        "cardinality" : "multiple",
-                        "value": "Ассистент" 
                     }
-                },
-                "Ассистент" : {
-                    "Имя" : {
-                        "type" : "String",
-                        "cardinality" : "single"
-                    },
-                    "Зарпалата" : {
-                        "type" : "num",
-                        "cardinality" : "single"
-                    },
-                    "Предмет": {
-                        "type" : "String",
-                        "cardinality" : "multiple"
+                }
+            },
+            "Институт" :{
+                "Кафедра": {
+                    "Subclasses" : {
+                        "Заведующий": {
+                            "Attributes" : {
+                                "Имя" : {
+                                    "type" : "String",
+                                    "cardinality" : "single"
+                                },
+                                "Зарпалата" : {
+                                    "type" : "num",
+                                    "cardinality" : "single"
+                                }
+                            }
+                        },
+                        "Старший преподаватель": {
+                            "Attributes": {
+                                "Имя" : {
+                                    "type" : "String",
+                                    "cardinality" : "single"
+                                },
+                                "Зарпалата" : {
+                                    "type" : "num",
+                                    "cardinality" : "single"
+                                },
+                                "Предмет": {
+                                    "type" : "String",
+                                    "cardinality" : "multiple"
+                                },
+                                "Подчиненный": {
+                                    "type" : "Link",
+                                    "cardinality" : "multiple",
+                                    "value": "Преподаватель" 
+                                }
+                            }   
+                        },
+                        "Преподаватель" : {
+                            "Attributes" : {
+                                "Имя" : {
+                                    "type" : "String",
+                                    "cardinality" : "single"
+                                },
+                                "Зарпалата" : {
+                                    "type" : "num",
+                                    "cardinality" : "single"
+                                },
+                                "Предмет": {
+                                    "type" : "String",
+                                    "cardinality" : "multiple"
+                                },
+                                "Подчиненный" : {
+                                    "type" : "Link",
+                                    "cardinality" : "multiple",
+                                    "value": "Ассистент" 
+                                }
+                            }  
+                        },
+                        "Ассистент" : {
+                            "Attributes": {
+                                "Имя" : {
+                                    "type" : "String",
+                                    "cardinality" : "single"
+                                },
+                                "Зарпалата" : {
+                                    "type" : "num",
+                                    "cardinality" : "single"
+                                },
+                                "Предмет": {
+                                    "type" : "String",
+                                    "cardinality" : "multiple"
+                                }
+                            }
+                        }
                     }
                 }
             }
