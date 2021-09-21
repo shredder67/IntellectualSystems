@@ -29,7 +29,7 @@ class HClass:
         this.instances = []
 
 
-    def add_num_atr(this, name, cardinality):
+    def _add_num_atr(this, name, cardinality):
         if name in this.attributes.keys():
             return
         if(cardinality == 'single'):
@@ -38,7 +38,7 @@ class HClass:
             this.attributes[name] = AtrType.NUM_MULTIPLE
     
 
-    def add_str_atr(this, name, cardinality):
+    def _add_str_atr(this, name, cardinality):
         if name in this.attributes.keys():
             return
         if(cardinality == 'single'):
@@ -47,10 +47,20 @@ class HClass:
             this.attributes[name] = AtrType.STR_MULTIPLE
 
 
-    def add_link_atr(this, name, classes):
+    def _add_link_atr(this, name, classes):
         if name in this.attributes.keys():
             return
         this.attributes[name] = AtrType.LINK
+
+    def add_atr(this, name, type, *args):
+        if type == 'String':
+            this._add_str_atr(name, *args)
+        elif type == 'Num':
+            this._add_num_atr(name, *args)
+        elif type == 'Link':
+            this._add_link_atr(name, *args)
+        else:
+            raise ValueError
 
 
     def create_instance(this, values):
@@ -58,6 +68,16 @@ class HClass:
         i = 0
         for atr_name in this.attributes:
             # ? Type check implementation
+            if(this.attributes[atr_name] == AtrType.STR_SINGLE):
+                inst[atr_name] = float(values[i])
+            if(this.attributes[atr_name] == AtrType.STR_MULTIPLE):
+                inst[atr_name] = map(float, values[i].split(';'))
+            if(this.attributes[atr_name] == AtrType.NUM_SINGLE):
+                inst[atr_name] = values[i]
+            if(this.attributes[atr_name] == AtrType.NUM_MULTIPLE):
+                inst[atr_name] = map(strip, values[i].split(';'))
+            if(this.attributes[atr_name] == AtrType.LINK):
+                inst[atr_name] = 
             inst[atr_name] = values[i]
             i += 1
         this.instances.append(inst)
@@ -167,11 +187,22 @@ class Hierarchy:
     #         }
     #     }
     # }
+
+    def _generate_hierarchy(this, cur):
+        for sub in cur["Subclasses"]:
+            scls = HClass(sub)
+            if "Attribues" in sub:
+                for atr in sub["Attributes"]:
+                    if atr["type"] == 
+
     def parse_from_json(this, filename):
-        with open("data_file.json", "r") as data:
-            hierData = json.loads(data)
-            root_name = hierData.Base.name
+        with open(filename, "r") as data:
+            hierData = json.load(data)
+            root_name = hierData["Base"]["Name"]
             root = HClass(root_name)
+            print(root)
             print(hierData)
+            cur = root
+            root.subclasses = _generate_hierarchy(cur)
 
 

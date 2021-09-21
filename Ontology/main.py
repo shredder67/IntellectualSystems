@@ -99,16 +99,7 @@ class CommandHandler:
     def _add_atr(this, cls, arg):
         args = list(map(str.strip, arg.split(',')))
         try:
-            res = ''
-            type = args[0]
-            if type == 'String':
-                cls.add_str_atr(args[1], args[2])
-            elif type == 'Num':
-                cls.add_num_atr(args[1], args[2])
-            elif type == 'Link':
-                cls.add_link_atr(args[1], args[3:-1])
-            else:
-                raise ValueError
+            cls.add_atr(this, args[0], *args[1:])
         except IndexError:
             return 'Wrong amount of arguments!'
         except ValueError:
