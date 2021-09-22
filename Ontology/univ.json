@@ -1,0 +1,131 @@
+{
+    "HierarchyName" : "Университет",
+    "Structure":
+    [
+        {
+            "Name" : "ВУЗ",
+            "Attributes" : {},
+            "Parent" : null,
+            "Instances" : []
+        },
+        {
+            "Name" : "Ректор",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                },
+                "Подчиненный": {
+                    "type" : "LINK_SINGLE",
+                    "value": ["Проректор"] 
+                }
+           },
+            "Parent" : "ВУЗ",
+            "Instances" : []
+        },
+        {
+            "Name" : "Проректор",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                }
+            },
+            "Parent" : "ВУЗ",
+            "Instances" : []
+        },
+        {
+            "Name" : "Институт",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                }
+            },
+            "Parent" : "ВУЗ",
+            "Instances" : []
+        },
+        {
+            "Name" : "Кафедра",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                }
+            },
+            "Parent" : "Институт",
+            "Instances" : []
+        },
+        {
+            "Name" : "Заведущий",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                }
+            },
+            "Parent" : "Институт",
+            "Instances" : []
+        },
+        {
+            "Name" : "Старший преподаватель",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                },
+                "Предмет": {
+                    "type" : "STR_MULTIPLE"
+                },
+                "Подчиненный": {
+                    "type" : "LINK_MULTIPLE",
+                    "value": ["Преподаватель"] 
+                }
+            },
+            "Parent" : "Институт",
+            "Instances" : []
+        },
+        {
+            "Name" : "Преподаватель",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                },
+                "Предмет": {
+                    "type" : "STR_MULTIPLE"
+                },
+                "Подчиненный": {
+                    "type" : "LINK_MULTIPLE",
+                    "value": ["Ассистент"] 
+                }
+            },
+            "Parent" : "Институт",
+            "Instances" : []
+        },
+        {
+            "Name" : "Ассистент",
+            "Attributes" : {
+                "Имя" : {
+                    "type" : "STR_SINGLE"
+                },
+                "Зарпалата" : {
+                    "type" : "NUM_SINGLE"
+                },
+                "Предмет": {
+                    "type" : "STR_MULTIPLE"
+                }
+            },
+            "Parent" : "Институт",
+            "Instances" : []
+        }
+    ]
+}

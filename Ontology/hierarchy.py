@@ -2,9 +2,15 @@ import json
 from enum import Enum
 
 class Link:
-    def __init__(this, keys):
-        this.keys = keys.copy()
-        this.values = []
+    def __init__(this, type, classes):
+        this.type = type
+        this.classes = classes
+
+    def __str__(this):
+        res = '['
+        for cls in this.classes:
+            res += ' ' + cls.name + ','
+        return res[:-1]
 
 
 class AtrType(Enum):
@@ -12,7 +18,8 @@ class AtrType(Enum):
     STR_MULTIPLE = 1
     NUM_SINGLE = 2
     NUM_MULTIPLE = 3
-    LINK = 4
+    LINK_SINGLE = 4
+    LINK_MULTIPLE = 5
 
 
 # Instances hold default properties (id and name) and custom, that are added on the fly
@@ -24,43 +31,26 @@ class HClass:
         this.id = HClass.id + 1
         HClass.id += 1
         this.name = this.name + str(HClass.id) if name is None else name
-        this.subclasses = [] # instances created with attributes
         this.attributes = dict() # atr_name : atr_type pairs
+        this.subclasses = []
         this.instances = []
 
+    # Adds attribute to attributes list, which stores attribute name and type
+    # ! Important note: Link type (any) stores additional list of classes, with use of cutom Link class
+    def add_atr(this, hier, name, str_type, *args):
+        type = AtrType[str_type]
 
-    def _add_num_atr(this, name, cardinality):
-        if name in this.attributes.keys():
-            return
-        if(cardinality == 'single'):
-            this.attributes[name] = AtrType.NUM_SINGLE
-        elif(cardinality == 'multiple'):
-            this.attributes[name] = AtrType.NUM_MULTIPLE
-    
+        if type is None:
+            raise ValueError("Wrong attribute type!")
 
-    def _add_str_atr(this, name, cardinality):
-        if name in this.attributes.keys():
-            return
-        if(cardinality == 'single'):
-            this.attributes[name] = AtrType.STR_SINGLE
-        elif(cardinality == 'multiple'):
-            this.attributes[name] = AtrType.STR_MULTIPLE
-
-
-    def _add_link_atr(this, name, classes):
-        if name in this.attributes.keys():
-            return
-        this.attributes[name] = AtrType.LINK
-
-    def add_atr(this, name, type, *args):
-        if type == 'String':
-            this._add_str_atr(name, *args)
-        elif type == 'Num':
-            this._add_num_atr(name, *args)
-        elif type == 'Link':
-            this._add_link_atr(name, *args)
+        if type == AtrType.LINK_SINGLE or type == AtrType.LINK_MULTIPLE:
+            # Search for all classes in hierarchy
+            links = [hier.find_class(cls_name) for cls_name in args]
+            if None in links:
+                raise ValueError("Class was not found in hierarchy!")
+            this.attributes[name] = Link(type, links)
         else:
-            raise ValueError
+            this.attributes[name] = type
 
 
     def create_instance(this, values):
@@ -75,12 +65,21 @@ class HClass:
             if(this.attributes[atr_name] == AtrType.NUM_SINGLE):
                 inst[atr_name] = values[i]
             if(this.attributes[atr_name] == AtrType.NUM_MULTIPLE):
-                inst[atr_name] = map(strip, values[i].split(';'))
-            if(this.attributes[atr_name] == AtrType.LINK):
-                inst[atr_name] = 
+                inst[atr_name] = map(str.strip, values[i].split(';'))
+            if(this.attributes[atr_name] == AtrType.LINK_SINGLE):
+                pass
+            if(this.attributes[atr_name] == AtrType.LINK_MULTIPLE):
+                pass
             inst[atr_name] = values[i]
             i += 1
         this.instances.append(inst)
+
+
+    def __del__(this):
+        if this.subclasses:
+            for sub in this.subclasses:
+                del sub
+
 
 
 # Instance caches whole hierarchy, reads, saves and represents as string
@@ -144,13 +143,13 @@ class Hierarchy:
         sub = ''
         line = shift*'--' + cur.name
 
-        if(cur.attributes):
+        if cur.attributes:
             line += '('
             for k in cur.attributes.keys():
                 line += k + ', '
             line = line[:-2] + ')'
         
-        if(cur.instances):
+        if cur.instances:
             line += ':'
             for inst in cur.instances:
                 line += '\n' + shift * '  ' + '['
@@ -158,7 +157,7 @@ class Hierarchy:
                     line += k + ', '
             line = line[:-2] + ']'
         
-        if(cur.subclasses):
+        if cur.subclasses:
             sub += line + '\n'
             for subcls in cur.subclasses:
                 sub += this._scan_hierarchy(subcls, shift + 1)
@@ -174,35 +173,42 @@ class Hierarchy:
             return this._scan_hierarchy(this.root_class, 0)[:-1]
 
 
-    # ? should class factory method, consturcting Hierarchy object based of reading file
-    # File structure should be following:
-    # {
-    #     "Base":
-    #     {
-    #         "name": "SomeName",
-    #         {
-    #             "Subclasses" : {
-    #                 ... (ever instanciable subclass should have "Attributes" field)
-    #             }
-    #         }
-    #     }
-    # }
-
-    def _generate_hierarchy(this, cur):
-        for sub in cur["Subclasses"]:
-            scls = HClass(sub)
-            if "Attribues" in sub:
-                for atr in sub["Attributes"]:
-                    if atr["type"] == 
-
     def parse_from_json(this, filename):
-        with open(filename, "r") as data:
-            hierData = json.load(data)
-            root_name = hierData["Base"]["Name"]
-            root = HClass(root_name)
-            print(root)
-            print(hierData)
-            cur = root
-            root.subclasses = _generate_hierarchy(cur)
+        try:
+            with open(filename, "r") as data:
+                parsed_json = json.load(data)
+                this.name = parsed_json["HierarchyName"]
+                hierData = parsed_json["Structure"]
+
+                for classdata in hierData:
+                    cl = HClass(classdata["Name"])
+
+                    # parse attributes
+                    for name, batch in classdata["Attributes"].items():
+                        args = list(batch.values()) # type or type and some additional values
+                        cl.add_atr(this, name, args[0], args[1:-1])
+
+                    # add into hierarchy
+                    if this.root_class == None and classdata["Parent"] == None:
+                        this.root_class = cl
+                    else:
+                        parent = this.find_class(classdata["Parent"])
+                        if parent == None:
+                            del this.root_class
+                            raise ValueError(cl.name + " has no parent in hierarchy!")
+                        
+                        parent.subclasses.append(cl)
+                
+                return "Parsed hierarchy!"
+        except ValueError as err:
+            del this.root_class # clean tree before exiting
+            return str(err.args[0])
+
+
+    def __del__(this):
+        del this.root_class
+
+          
+
 
 

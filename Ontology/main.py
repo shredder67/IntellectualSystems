@@ -23,22 +23,26 @@ signal.signal(signal.SIGINT, ctrl_c_handler)
 class CommandHandler:
 
     # Hierarchy object
-    hier = object()
+    hier = None
 
     commands_desc = dict({
-        'info':        '() - prints all commands info',
-        'create':      '(hierarchy_name) - creates a new hiearchy and loads it in memory',
-        'print':       '() - prints the current hierarchy',
-        'add_cls':     '(name, super_class = None) - creates new class',
-        'add_atr':     '(type (String, Num, Link), name, cardinality(single, multiple)(, cls_name if type is Link)) - adds attribute to class',
-        'inst':        '({ atr_name : atr_value }) - creates an instance of class with entered parameters',
-        'print_inst':  '() - prints all instances in hierarchy',
-        'save':        '(path) - saves hierarchy as json file',
-        'open':        '(path) - opens exiting hierarchy (from json)',
-        'find':        '(atr_name, condition) - searches through class and subclasses instances, applying condition to atr value'
+        'info':         '() - prints all commands info',
+        'create':       '(hierarchy_name) - creates a new hiearchy and loads it in memory',
+        'print':        '() - prints the current hierarchy',
+        'add_cls':      '(name, super_class = None) - creates new class',
+        'add_atr':      '(type, name) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'\
+                        'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'\
+                        'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other class/classes'\
+                        '\nIf type is LINK, add third arguement with class name/names',
+        'inst':         '({ atr_name : atr_value }) - creates an instance of class with entered parameters',
+        'print_inst':   '() - prints all instances in hierarchy',
+        'save':         '(path) - saves hierarchy as json file',
+        'open':         '(path) - opens exiting hierarchy (from json)',
+        'find':         '(atr_name, condition) - searches through class and subclasses instances, applying condition to atr value'
     })
     commands = commands_desc.keys()
 
+    # Handles function calls
     def handle(this, command_name, arg):
         mes = 'Nothing happend...'
         if command_name == 'info':
@@ -57,8 +61,8 @@ class CommandHandler:
             mes = this._open(arg)
         return mes
     
-
-    def handle_cls(this, cls_name, command_name, arg):
+    #Handles fuction calls related to classes in hierarchy in format cls_name.command(args)
+    def handle_cls(this, cls_name, command_name, args):
         mes = 'Nothing happend...'
 
         cls = this.hier.find_class(cls_name)
@@ -67,9 +71,9 @@ class CommandHandler:
             return mes
 
         if command_name == 'add_atr':
-            mes = this._add_atr(cls, arg)
+            mes = this._add_atr(cls, args)
         elif command_name == 'inst':
-            mes = this._inst(cls, arg)
+            mes = this._inst(cls, args)
         return mes
         
     
@@ -99,11 +103,11 @@ class CommandHandler:
     def _add_atr(this, cls, arg):
         args = list(map(str.strip, arg.split(',')))
         try:
-            cls.add_atr(this, args[0], *args[1:])
+            cls.add_atr(this, this.hier, args[0], *args[1:])
         except IndexError:
             return 'Wrong amount of arguments!'
-        except ValueError:
-            return 'Wrong argument type!'
+        except ValueError as err:
+            return str(err.args[0])
         return 'Attribute ' + args[1] + ' added to ' + cls.name
 
 
@@ -129,8 +133,10 @@ class CommandHandler:
     
     def _open(this, arg):
         if path.exists(arg):
-            this.hier.parse_from_json(arg)
-            return 'Parsed hierarchy!'
+            if this.hier is None:
+                this.hier = Hierarchy()
+                res = this.hier.parse_from_json(arg)
+                return res
         else:
             return 'Wrong path!'
 
