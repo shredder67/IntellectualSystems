@@ -18,12 +18,17 @@
                     "type" : "NUM_SINGLE"
                 },
                 "Подчиненный": {
-                    "type" : "LINK_SINGLE",
-                    "value": ["Проректор"] 
+                    "type" : "LINK_MULTIPLE"
                 }
            },
             "Parent" : "ВУЗ",
-            "Instances" : []
+            "Instances": [{
+                    "name" : "",
+                    "values" : [
+                        
+                    ]
+                }
+            ]
         },
         {
             "Name" : "Проректор",
@@ -84,8 +89,7 @@
                     "type" : "STR_MULTIPLE"
                 },
                 "Подчиненный": {
-                    "type" : "LINK_MULTIPLE",
-                    "value": ["Преподаватель"] 
+                    "type" : "LINK_MULTIPLE"
                 }
             },
             "Parent" : "Институт",
@@ -104,8 +108,7 @@
                     "type" : "STR_MULTIPLE"
                 },
                 "Подчиненный": {
-                    "type" : "LINK_MULTIPLE",
-                    "value": ["Ассистент"] 
+                    "type" : "LINK_MULTIPLE"
                 }
             },
             "Parent" : "Институт",

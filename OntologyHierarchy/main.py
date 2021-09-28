@@ -1,13 +1,17 @@
 # Program creates class hierarchy and instances, reads and saves it as JSON file.
-# Allows to perform query throw the "knowledge base" of instances.
+# Allows to perform query throw the "knowledge base" of instances
+# Instances have attributes of string, numerical and instance types
 # Type info() for command information
 
 # TODO: 
 # ! instance creation + print
-#   UPD0: DONE, test with LINKS
-# ! json parsing (with attributes), reading, *saving
+#   refactor function inst in hierarchy.py
+#   add instance parsing
+# ! json parsing (with attributes)
 #   UPD1: check add_atr method for fix instructions, also add instance reading
+#   UPD2: reading works greatly, need to add instance reading
 # ! find request to hierarchy
+
 
 import signal
 import sys
@@ -35,11 +39,10 @@ class CommandHandler:
         'create': '(hierarchy_name) - creates a new hiearchy and loads it in memory',
         'print': '() - prints the current hierarchy',
         'add_cls': '(name, super_class = None) - creates new class',
-        'add_atr':  '(type, name) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'
+        'add_atr':  '(name, type) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'
                     'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'
                     'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other'
-                    'class/classes\nIf type is LINK, add third argument with class name/names\n'
-                    'NOTE: use like this: cls_name.add_atr(args)',
+                    'class/classes',
         'inst': '({ atr_name : atr_value }) - creates an instance of class with entered parameters'
                 'NOTE: use like this: cls_name.inst(args)',
         'print_inst': '() - prints all instances in hierarchy',
@@ -107,7 +110,7 @@ class CommandHandler:
     def _add_atr(self, cls, arg):
         args = list(map(str.strip, arg.split(',')))
         try:
-            cls.add_atr(self, self.HierarchyObject, args[0], *args[1:])
+            cls.add_atr(*args)
         except IndexError:
             return 'Wrong amount of arguments!'
         except ValueError as err:
@@ -121,7 +124,7 @@ class CommandHandler:
         return 'Instance created!'
 
     def _print(self):
-        print(self.HierarchyObject.to_str())
+        print('\n' + self.HierarchyObject.to_str())
         return ''
 
     def _print_inst(self):
@@ -134,8 +137,8 @@ class CommandHandler:
     def _open(self, arg):
         if path.exists(arg):
             self.HierarchyObject = Hierarchy()
-            res_mesage = self.HierarchyObject.parse_from_json(arg)
-            return res_mesage
+            self.HierarchyObject.parse_from_json(arg)
+            return 'Hierarchy parsed!'
         else:
             return 'Wrong path!'
 
@@ -144,7 +147,7 @@ class CommandHandler:
 # args : arg1, arg2, ..., argn or {... key : val ...}
 comHandler = CommandHandler()
 command_pattern = re.compile('^([A-z]*)\(([^)]*)\)$')
-clsmethod_pattern = re.compile('^([A-Za-z0-9]*).([A-z]*)\(([^)]*)\)$')
+clsmethod_pattern = re.compile('^([A-Za-z0-9А-Яа-я]*).([A-zА-Яа-я]*)\(([^)]*)\)$')
 
 # Input loop
 while True:
