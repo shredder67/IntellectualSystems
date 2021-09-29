@@ -1,6 +1,7 @@
 import json
 from enum import Enum
 
+
 # Value holder for link attributes
 class Link:
     def __init__(self, classes):
@@ -9,7 +10,7 @@ class Link:
     def __eq__(self, other):
         if not isinstance(other, Link):
             return NotImplemented
-        
+
         if len(other.classes) != len(self.classes):
             return False
 
@@ -39,24 +40,22 @@ class AtrType(Enum):
 class HClass:
     id = 0
 
-    def __init__(self, host_hierarchy, name = None):
+    def __init__(self, name=None):
         self.id = HClass.id + 1
         HClass.id += 1
-        self.name = "Class" + str(HClass.id) if name is None else name
-        self.hierarchy = host_hierarchy
+        self.name = "DefaultClassName" + str(HClass.id) if name is None else name
         self.attributes = dict()  # atr_name : atr_type pairs
         self.subclasses = []
         self.instances = []
 
     # Adds attribute to attributes list, which stores attribute name and type
     def add_atr(self, name, str_type):
-        
+
         if str_type not in AtrType.__dict__.keys():
             raise ValueError("Wrong attribute type!")
 
         atr_type = AtrType[str_type]
         self.attributes[name] = atr_type
-
 
     # TODO: Fix this method and abstract it from input format
     def create_instance(self, values):
@@ -68,7 +67,6 @@ class HClass:
             # TODO: load values into memory
             i += 1
         self.instances.append(inst)
-
 
     def __del__(self):
         if self.subclasses:
@@ -187,8 +185,9 @@ class Hierarchy:
                         parent.subclasses.append(cl)
 
         except ValueError as err:
-            del self.root_class  # clean tree before exiting
-            return str(err.args[0])
+            if self.root_class:
+                del self.root_class  # clean tree before exiting
+            raise err
 
     def __del__(self):
         if self.root_class:
