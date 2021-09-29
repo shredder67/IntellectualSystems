@@ -28,6 +28,7 @@ class Link:
 
 
 class AtrType(Enum):
+    BASE = -1
     STR_SINGLE = 0
     STR_MULTIPLE = 1
     NUM_SINGLE = 2
@@ -35,7 +36,6 @@ class AtrType(Enum):
     LINK_SINGLE = 4
     LINK_MULTIPLE = 5
 
-# TODO Rework ValueHolder dependency so I can use polymorph methods for data comparison
 # Base Attribute class
 class Attribute:
     def __init__(self, name, atr_type):
@@ -51,21 +51,6 @@ class NumericAttribute(Attribute):
             raise ValueError
 
 
-class NumericValueHolder(NumericAttribute):
-    def __init__(self, name, atr_type, value):
-        super().__init__(name, atr_type)
-        self.value = value
-
-    def __cmp__(self, other):
-        if not isinstance(other, NumericValueHolder) and self.name != other.name:
-            return NotImplemented
-
-        if self.atr_type == AtrType.NUM_SINGLE:
-            pass
-        else:
-            pass
-
-
 class StringAttribute(Attribute):
     def __init__(self, name, atr_type):
         if atr_type == AtrType.STR_SINGLE or atr_type == AtrType.STR_MULTIPLE:
@@ -74,42 +59,12 @@ class StringAttribute(Attribute):
             raise ValueError
 
 
-class StringValueHolder(StringAttribute):
-    def __init__(self, name, atr_type, value):
-        super().__init__(name, atr_type)
-        self.value = value
-
-    def __cmp__(self, other):
-        if not isinstance(other, StringValueHolder) and self.name != other.name:
-            return NotImplemented
-
-        if self.atr_type == AtrType.STR_SINGLE:
-            pass
-        else:
-            pass
-
-
 class LinkAttribute(Attribute):
     def __init__(self, name, atr_type):
         if atr_type == AtrType.LINK_SINGLE or atr_type == AtrType.LINK_MULTIPLE:
             super().__init__(name, atr_type)
         else:
             raise ValueError
-
-
-class LinkValueHolder(Attribute):
-    def __init__(self, name, atr_type, value):
-        super().__init__(name, atr_type)
-        self.value = Link(value)
-
-    def __cmp__(self, other):
-        if not isinstance(other, LinkValueHolder) and self.name != other.name:
-            return NotImplemented
-
-        if self.atr_type == AtrType.LINK_SINGLE:
-            pass
-        else:
-            pass
 
 
 class AttributeFactory:
@@ -123,15 +78,80 @@ class AttributeFactory:
             return LinkAttribute(atr_name, atr_type)
 
 
+# Base Value Holder (used in instances)
+class ValueHolder:
+    def __init__(self, name, atr_type):
+        self.name = name
+        self.atr_type = atr_type
+
+    def add_value(self, value):
+        pass
+
+
+class NumericValueHolder(ValueHolder):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.add_value(value)
+
+    def add_value(self, value):
+        self.value = value
+
+    def __cmp__(self, other):
+        if not isinstance(other, NumericValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.NUM_SINGLE:
+            return 
+        else:
+            pass
+
+
+class StringValueHolder(ValueHolder):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.add_value(value)
+
+
+    def add_value(self, value):
+        self.add_value = value
+
+    def __cmp__(self, other):
+        if not isinstance(other, StringValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.STR_SINGLE:
+            pass
+        else:
+            pass
+
+
+class LinkValueHolder(ValueHolder):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.add_value(value)
+
+    def add_value(self, value):
+        self.value = Link(value)
+
+    def __cmp__(self, other):
+        if not isinstance(other, LinkValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.LINK_SINGLE:
+            pass
+        else:
+            pass
+
+
 class ValueHolderFactory:
     @staticmethod
     def create_value_holder(attribute, value):
         if attribute(isinstance(attribute, NumericAttribute)):
             return NumericValueHolder(attribute.name, attribute.atr_type, value)
         if attribute(isinstance(attribute, StringAttribute)):
-            return NumericValueHolder(attribute.name, attribute.atr_type, value)
+            return StringValueHolder(attribute.name, attribute.atr_type, value)
         if attribute(isinstance(attribute, LinkAttribute)):
-            return NumericValueHolder(attribute.name, attribute.atr_type, value)
+            return LinkValueHolder(attribute.name, attribute.atr_type, value)
 
 
 # Instances hold default properties (id and name) and custom, that are added on the fly
@@ -144,7 +164,7 @@ class HClass:
         self.name = "DefaultClassName" + str(HClass.id) if name is None else name
         self.attributes: list = []
         self.subclasses: list = []
-        self.instances: list = []
+        self.instances: dict = {}
 
     def add_atr(self, name, str_type):
         if str_type not in AtrType.__dict__.keys():
@@ -159,17 +179,23 @@ class HClass:
                 return atr
         return None
 
+    def has_atr(self, name):
+        for atr in self.attributes:
+            if atr.name == name:
+                return True
+        return False
+
     def create_instance(self, instance_name, atr_values):
         # values : {atr_name : value (single value or list)}
-        # TODO add this data to file
-        inst_attributes = []
+        # TODO Fix instance structure
+        inst_values = []
         for atr_name, value in atr_values.items():
             atr = self.get_atr_by_name(atr_name)
             if atr is None:
                 raise ValueError
-            inst_attributes.append(ValueHolderFactory.create_value_holder(atr, value))
+            inst_values.append(ValueHolderFactory.create_value_holder(atr, value))
 
-        self.instances[instance_name] = inst_attributes
+        self.instances[instance_name] = inst_values
 
     def __del__(self):
         if self.subclasses:
@@ -211,6 +237,28 @@ class Hierarchy:
             parent_class = self.find_class(class_parent)
             if parent_class:
                 parent_class.subclasses.append(HClass(class_name))
+
+    def search_with_predicate(self, cur, atr_name, predicate):
+        # Breadth first search
+        queue = []
+        visited = {}
+        queue.append(cur)
+        visited[cur.name] = True
+        res = []
+        while len(queue) != 0:
+            v = queue.pop()
+            if v.has_atr(atr_name):
+                for inst_name, inst_values in self.instances.items():
+                    for value_holder in inst_values:
+                        if value_holder.name == atr_name:
+                            if predicate(value_holder.value):
+                                res.append((inst_name, inst_values))
+            for sub in v.subclasses:
+                if sub.name not in visited.keys():
+                    queue.append(sub)
+                    visited[sub] = True
+
+        return None
 
     def _scan_hierarchy(self, cur, shift):
         sub = ''
@@ -268,6 +316,8 @@ class Hierarchy:
                 parsed_json = json.load(data)
                 self.name = parsed_json["HierarchyName"]
                 hier_data = parsed_json["Structure"]
+                instances_data = parsed_json["Instances"]
+                query_data = parsed_json["Query Data"]
 
                 for classdata in hier_data:
                     cl = HClass(classdata["Name"])
@@ -287,10 +337,37 @@ class Hierarchy:
 
                         parent.subclasses.append(cl)
 
+                for instance in instances_data:
+                    cl = self.find_class(instance["ClassName"])
+                    if cl is None:
+                        raise ValueError
+                    inst_values = instance["Values"]
+                    inst_name = inst_values["InstanceName"]
+                    del inst_values["InstanceName"]
+                    cl.create_instance(inst_name, inst_values)
+
+                for query in query_data:
+                    pass
+
+
+                
+
         except ValueError as err:
             if self.root_class:
                 del self.root_class  # clean tree before exiting
             raise err
+
+    def query(self, cls_name, atr_name, relation, atr_value):
+        # Find root class for query
+        query_root = self.find_class(cls_name)
+        if not query_root:
+            raise ValueError
+
+        # Form a predicate
+        pred = lambda x : exec("x " + relation + " atr_value")
+
+        query_res = self.search_with_predicate(query_root, pred)
+        return query_res 
 
     def __del__(self):
         if self.root_class:

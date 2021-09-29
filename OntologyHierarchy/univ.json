@@ -10,9 +10,6 @@
     {
       "Name": "Ректор",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         },
@@ -32,9 +29,6 @@
     {
       "Name": "Проректор",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         }
@@ -44,30 +38,19 @@
     },
     {
       "Name": "Институт",
-      "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        }
-      },
+      "Attributes": {},
       "Parent": "ВУЗ",
       "Instances": []
     },
     {
       "Name": "Кафедра",
-      "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        }
-      },
+      "Attributes": {},
       "Parent": "Институт",
       "Instances": []
     },
     {
       "Name": "Заведущий",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         }
@@ -84,9 +67,6 @@
     {
       "Name": "Старший преподаватель",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         },
@@ -103,9 +83,6 @@
     {
       "Name": "Преподаватель",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         },
@@ -122,48 +99,148 @@
     {
       "Name": "Ассистент",
       "Attributes": {
-        "Имя": {
-          "type": "STR_SINGLE"
-        },
         "Зарпалата": {
           "type": "NUM_SINGLE"
         },
         "Предмет": {
           "type": "STR_MULTIPLE"
         }
-      },
+      },    
       "Parent": "Преподавательский состав",
       "Instances": []
     }
   ],
   "Instances": [
     {
-      "ClassName": "",
+      "ClassName": "Ректор",
       "Values": [
         {
-          "AtrName": "",
-          "Value": []
+          "AtrName": "InstanceName",
+          "Value": "Станислав А.К."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 100000
+        },
+        {
+          "AtrName": "Подчиненный",
+          "Value": "Прокопов Николай Иванович"
         }
       ]
     },
     {
-      "ClassName": "",
+      "ClassName": "Проректор",
       "Values": [
         {
-          "AtrName": "",
-          "Value": []
+          "AtrName": "InstanceName",
+          "Value": "Прокопов Н.И."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 80000
         }
       ]
     },
     {
-      "ClassName": "",
+      "ClassName": "Институт",
       "Values": [
         {
-          "AtrName": "",
-          "Value": []
+          "AtrName": "InstanceName",
+          "Value": "ИТ"
+        }
+      ]
+    },
+    {
+      "ClassName": "Кафедра",
+      "Values": [
+        {
+          "AtrName": "InstanceName",
+          "Value": "ВТ"
+        }
+      ]
+    },
+    {
+      "ClassName": "Заведующий",
+      "Values": [
+        {
+          "AtrName": "InstanceName",
+          "Value": "Платонова О.В."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 60000
+        }
+      ]
+    },
+    {
+      "ClassName": "Старший преподаватель",
+      "Values": [
+        {
+          "AtrName": "InstanceName",
+          "Value": "Антик М.И."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 55000
+        },
+        {
+          "AtrName": "Предмет",
+          "Value": ["ТКА", "ТФЯ", "Дискретная математика"]
+        },
+        {
+          "AtrName": "Подчиненный",
+          "Value": "Карпов"
+        }
+      ]
+    },
+    {
+      "ClassName": "Преподаватель",
+      "Values": [
+        {
+          "AtrName": "InstanceName",
+          "Value": "Карпов Л.Л."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 35000
+        },
+        {
+          "AtrName": "Предмет",
+          "Value": ["ТФЯ"]
+        }
+      ]
+    },
+    {
+      "ClassName": "Преподаватель",
+      "Values": [
+        {
+          "AtrName": "Зарплата",
+          "Value": 34000
+        },
+        {
+          "AtrName": "Предмет",
+          "Value": ["ТКА"]
+        }
+      ]
+    },
+    {
+      "ClassName": "Ассистент",
+      "Values": [
+        {
+          "AtrName": "InstanceName",
+          "Value": "Пальчиков К.У."
+        },
+        {
+          "AtrName": "Зарплата",
+          "Value": 20000
+        },
+        {
+          "AtrName": "Предмет",
+          "Value": ["ТФЯ"]
         }
       ]
     }
+
   ],
   "Queries": [
     {
