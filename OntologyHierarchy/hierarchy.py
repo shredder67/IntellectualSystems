@@ -35,6 +35,104 @@ class AtrType(Enum):
     LINK_SINGLE = 4
     LINK_MULTIPLE = 5
 
+# TODO Rework ValueHolder dependency so I can use polymorph methods for data comparison
+# Base Attribute class
+class Attribute:
+    def __init__(self, name, atr_type):
+        self.name = name
+        self.atr_type = atr_type
+
+
+class NumericAttribute(Attribute):
+    def __init__(self, name, atr_type):
+        if atr_type == AtrType.NUM_SINGLE or atr_type == AtrType.NUM_MULTIPLE:
+            super().__init__(name, atr_type)
+        else:
+            raise ValueError
+
+
+class NumericValueHolder(NumericAttribute):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.value = value
+
+    def __cmp__(self, other):
+        if not isinstance(other, NumericValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.NUM_SINGLE:
+            pass
+        else:
+            pass
+
+
+class StringAttribute(Attribute):
+    def __init__(self, name, atr_type):
+        if atr_type == AtrType.STR_SINGLE or atr_type == AtrType.STR_MULTIPLE:
+            super().__init__(name, atr_type)
+        else:
+            raise ValueError
+
+
+class StringValueHolder(StringAttribute):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.value = value
+
+    def __cmp__(self, other):
+        if not isinstance(other, StringValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.STR_SINGLE:
+            pass
+        else:
+            pass
+
+
+class LinkAttribute(Attribute):
+    def __init__(self, name, atr_type):
+        if atr_type == AtrType.LINK_SINGLE or atr_type == AtrType.LINK_MULTIPLE:
+            super().__init__(name, atr_type)
+        else:
+            raise ValueError
+
+
+class LinkValueHolder(Attribute):
+    def __init__(self, name, atr_type, value):
+        super().__init__(name, atr_type)
+        self.value = Link(value)
+
+    def __cmp__(self, other):
+        if not isinstance(other, LinkValueHolder) and self.name != other.name:
+            return NotImplemented
+
+        if self.atr_type == AtrType.LINK_SINGLE:
+            pass
+        else:
+            pass
+
+
+class AttributeFactory:
+    @staticmethod
+    def create_attribute(atr_name, atr_type):
+        if atr_type == AtrType.NUM_SINGLE or atr_type == AtrType.NUM_MULTIPLE:
+            return NumericAttribute(atr_name, atr_type)
+        if atr_type == AtrType.STR_SINGLE or atr_type == AtrType.STR_MULTIPLE:
+            return StringAttribute(atr_name, atr_type)
+        if atr_type == AtrType.LINK_SINGLE or atr_type == AtrType.LINK_MULTIPLE:
+            return LinkAttribute(atr_name, atr_type)
+
+
+class ValueHolderFactory:
+    @staticmethod
+    def create_value_holder(attribute, value):
+        if attribute(isinstance(attribute, NumericAttribute)):
+            return NumericValueHolder(attribute.name, attribute.atr_type, value)
+        if attribute(isinstance(attribute, StringAttribute)):
+            return NumericValueHolder(attribute.name, attribute.atr_type, value)
+        if attribute(isinstance(attribute, LinkAttribute)):
+            return NumericValueHolder(attribute.name, attribute.atr_type, value)
+
 
 # Instances hold default properties (id and name) and custom, that are added on the fly
 class HClass:
@@ -44,29 +142,34 @@ class HClass:
         self.id = HClass.id + 1
         HClass.id += 1
         self.name = "DefaultClassName" + str(HClass.id) if name is None else name
-        self.attributes = dict()  # atr_name : atr_type pairs
-        self.subclasses = []
-        self.instances = []
+        self.attributes: list = []
+        self.subclasses: list = []
+        self.instances: list = []
 
-    # Adds attribute to attributes list, which stores attribute name and type
     def add_atr(self, name, str_type):
-
         if str_type not in AtrType.__dict__.keys():
             raise ValueError("Wrong attribute type!")
 
         atr_type = AtrType[str_type]
-        self.attributes[name] = atr_type
+        self.attributes.append(AttributeFactory.create_attribute(name, atr_type))
 
-    # TODO: Fix this method and abstract it from input format
-    def create_instance(self, values):
-        inst = dict()
-        i = 0
-        atr_names = self.attributes.keys()
-        for value in values:
-            # ? Type check implementation
-            # TODO: load values into memory
-            i += 1
-        self.instances.append(inst)
+    def get_atr_by_name(self, name):
+        for atr in self.attributes:
+            if atr.name == name:
+                return atr
+        return None
+
+    def create_instance(self, instance_name, atr_values):
+        # values : {atr_name : value (single value or list)}
+        # TODO add this data to file
+        inst_attributes = []
+        for atr_name, value in atr_values.items():
+            atr = self.get_atr_by_name(atr_name)
+            if atr is None:
+                raise ValueError
+            inst_attributes.append(ValueHolderFactory.create_value_holder(atr, value))
+
+        self.instances[instance_name] = inst_attributes
 
     def __del__(self):
         if self.subclasses:
@@ -115,8 +218,8 @@ class Hierarchy:
 
         if cur.attributes:
             line += '('
-            for k in cur.attributes.keys():
-                line += k + ', '
+            for atr in cur.attributes:
+                line += atr.name + ', '
             line = line[:-2] + ')'
 
         if cur.subclasses:

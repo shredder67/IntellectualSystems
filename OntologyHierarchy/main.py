@@ -3,14 +3,13 @@
 # Instances have attributes of string, numerical and instance types
 # Type info() for command information
 
-# TODO: 
-# ! instance creation + print
-#   refactor function inst in hierarchy.py
-#   add instance parsing
-# ! json parsing (with attributes)
+# TODO:
+#   find request to hierarchy
+
 #   UPD1: check add_atr method for fix instructions, also add instance reading
 #   UPD2: reading works greatly, need to add instance reading
-# ! find request to hierarchy
+#   UPD3: reworked Attribute instantiating, parsing works fine, need to test with instances
+
 
 
 import signal
@@ -132,7 +131,7 @@ class CommandHandler:
         return ''
 
     def _save(self, arg):
-        pass
+        return ''
 
     def _open(self, arg):
         if path.exists(arg):
