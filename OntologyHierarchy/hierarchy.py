@@ -36,6 +36,7 @@ class AtrType(Enum):
     LINK_SINGLE = 4
     LINK_MULTIPLE = 5
 
+
 # Base Attribute class
 class Attribute:
     def __init__(self, name, atr_type):
@@ -101,7 +102,7 @@ class NumericValueHolder(ValueHolder):
             return NotImplemented
 
         if self.atr_type == AtrType.NUM_SINGLE:
-            return 
+            return
         else:
             pass
 
@@ -110,7 +111,6 @@ class StringValueHolder(ValueHolder):
     def __init__(self, name, atr_type, value):
         super().__init__(name, atr_type)
         self.add_value(value)
-
 
     def add_value(self, value):
         self.add_value = value
@@ -146,11 +146,12 @@ class LinkValueHolder(ValueHolder):
 class ValueHolderFactory:
     @staticmethod
     def create_value_holder(attribute, value):
-        if attribute(isinstance(attribute, NumericAttribute)):
+        atr_type = attribute.atr_type
+        if atr_type == AtrType.NUM_SINGLE or atr_type == AtrType.NUM_MULTIPLE:
             return NumericValueHolder(attribute.name, attribute.atr_type, value)
-        if attribute(isinstance(attribute, StringAttribute)):
+        if atr_type == AtrType.STR_SINGLE or atr_type == AtrType.STR_MULTIPLE:
             return StringValueHolder(attribute.name, attribute.atr_type, value)
-        if attribute(isinstance(attribute, LinkAttribute)):
+        if atr_type == AtrType.LINK_SINGLE or atr_type == AtrType.LINK_MULTIPLE:
             return LinkValueHolder(attribute.name, attribute.atr_type, value)
 
 
@@ -196,11 +197,6 @@ class HClass:
             inst_values.append(ValueHolderFactory.create_value_holder(atr, value))
 
         self.instances[instance_name] = inst_values
-
-    def __del__(self):
-        if self.subclasses:
-            for sub in self.subclasses:
-                del sub
 
 
 # Instance caches whole hierarchy, reads, saves and represents as string
@@ -248,7 +244,7 @@ class Hierarchy:
         while len(queue) != 0:
             v = queue.pop()
             if v.has_atr(atr_name):
-                for inst_name, inst_values in self.instances.items():
+                for inst_name, inst_values in cur.instances.items():
                     for value_holder in inst_values:
                         if value_holder.name == atr_name:
                             if predicate(value_holder.value):
@@ -284,22 +280,21 @@ class Hierarchy:
 
         if cur.attributes:
             line += '('
-            for k in cur.attributes.keys():
-                line += k + ', '
+            for atr in cur.attributes:
+                line += atr.name + ', '
             line = line[:-2] + ')'
 
         if cur.instances:
             line += ':'
-            for inst in cur.instances:
-                line += '\n' + shift * '  ' + '['
-                for atr_name in inst:
-                    line += k + ', '
+            line += '\n' + shift * '  ' + '['
+            for inst_name in cur.instances:
+                line += inst_name + ', '
             line = line[:-2] + ']'
 
         if cur.subclasses:
             sub += line + '\n'
             for subcls in cur.subclasses:
-                sub += self._scan_hierarchy(subcls, shift + 1)
+                sub += self._scan_hierarchy_with_instances(subcls, shift + 1)
         else:
             sub += line + '\n'
         return sub
@@ -317,7 +312,6 @@ class Hierarchy:
                 self.name = parsed_json["HierarchyName"]
                 hier_data = parsed_json["Structure"]
                 instances_data = parsed_json["Instances"]
-                query_data = parsed_json["Query Data"]
 
                 for classdata in hier_data:
                     cl = HClass(classdata["Name"])
@@ -346,12 +340,6 @@ class Hierarchy:
                     del inst_values["InstanceName"]
                     cl.create_instance(inst_name, inst_values)
 
-                for query in query_data:
-                    pass
-
-
-                
-
         except ValueError as err:
             if self.root_class:
                 del self.root_class  # clean tree before exiting
@@ -364,11 +352,17 @@ class Hierarchy:
             raise ValueError
 
         # Form a predicate
-        pred = lambda x : exec("x " + relation + " atr_value")
+        def pred (x):
+            if relation == "=":
+                pass
+            elif relation == ">":
+                pass
+            elif relation == "<":
+                pass
+            elif relation == ">=":
+                pass
+            elif relation == "<=":
+                pass
 
-        query_res = self.search_with_predicate(query_root, pred)
-        return query_res 
-
-    def __del__(self):
-        if self.root_class:
-            del self.root_class
+        # query_res = self.search_with_predicate(query_root, pred)
+        # return query_res

@@ -46,7 +46,7 @@ class CommandHandler:
                 'NOTE: use like this: cls_name.inst(args)',
         'print_inst': '() - prints all instances in hierarchy',
         'save': '(path) - saves hierarchy as json file',
-        'open': '(path) - opens exiting hierarchy (from json)',
+        'open': '(path) - opens exiting hierarchy (from json) and instances',
         'find': '(atr_name, condition) - searches through class and subclasses instances, applying condition to atr '
                 'value '
     })
