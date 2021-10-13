@@ -15,7 +15,7 @@
 import signal
 import sys
 import re
-from os import path
+from os import path, system as os_system, name as os_name
 from hierarchy import Hierarchy
 
 
@@ -34,21 +34,21 @@ class CommandHandler:
     HierarchyObject = None
 
     commands_desc = dict({
-        'info': '() - prints all commands info',
-        'create': '(hierarchy_name) - creates a new hiearchy and loads it in memory',
-        'print': '() - prints the current hierarchy',
-        'add_cls': '(name, super_class = None) - creates new class',
-        'add_atr':  '(name, type) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'
-                    'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'
-                    'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other'
-                    'class/classes',
-        'inst': '({ atr_name : atr_value }) - creates an instance of class with entered parameters'
-                'NOTE: use like this: cls_name.inst(args)',
-        'print_inst': '() - prints all instances in hierarchy',
-        'save': '(path) - saves hierarchy as json file',
-        'open': '(path) - opens exiting hierarchy (from json) and instances',
-        'find': '(atr_name, condition) - searches through class and subclasses instances, applying condition to atr '
-                'value '
+        'info':         '() - prints all commands info',
+        'create':       '(hierarchy_name) - creates a new hiearchy and loads it in memory',
+        'print':        '() - prints the current hierarchy',
+        'add_cls':      '(name, super_class = None) - creates new class',
+        'add_atr':      '(name, type) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'
+                        'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'
+                        'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other'
+                        'class/classes',
+        'query':        '(root_class_name, atr_name, relation, value)',
+        'inst':         '({ atr_name : atr_value }) - creates an instance of class with entered parameters'
+                        'NOTE: use like this: cls_name.inst(args)',
+        'print_inst':   '() - prints all instances in hierarchy',
+        'save':         '(path) - saves hierarchy as json file',
+        'open':         '(path) - opens exiting hierarchy (from json) and instances',
+        'cls' :         'cleans the screen'
     })
     commands = commands_desc.keys()
 
@@ -59,16 +59,24 @@ class CommandHandler:
             mes = self._info()
         elif command_name == 'create':
             mes = self._create(arg)
+        elif command_name == 'open':
+            mes = self._open(arg)
+        elif command_name == 'cls':
+            mes = self._cls()
+
+        elif self.HierarchyObject is None:
+            mes = "Hierarchy has not been created/opened yet!"
+
         elif command_name == 'add_cls':
             mes = self._add_class(arg)
         elif command_name == 'print':
             mes = self._print()
         elif command_name == 'print_inst':
             mes = self._print_inst()
+        elif command_name == 'query':
+            mes = self._query(arg)
         elif command_name == 'save':
             mes = self._save(arg)
-        elif command_name == 'open':
-            mes = self._open(arg)
         return mes
 
     # Handles fuction calls related to classes in hierarchy in format cls_name.command(args)
@@ -114,7 +122,7 @@ class CommandHandler:
             return 'Wrong amount of arguments!'
         except ValueError as err:
             return str(err.args[0])
-        return 'Attribute ' + args[1] + ' added to ' + cls.name
+        return 'Attribute ' + args[0] + ' added to ' + cls.name
 
     def _inst(self, cls, arg):
         # arg is value, value, value in defined order
@@ -133,6 +141,14 @@ class CommandHandler:
     def _save(self, arg):
         return ''
 
+    def _query(self, arg):
+        values = list(map(str.strip, arg.split(',')))
+        res = self.HierarchyObject.query(*values)
+        print(res)
+        return ''
+        
+
+
     def _open(self, arg):
         if path.exists(arg):
             self.HierarchyObject = Hierarchy()
@@ -140,6 +156,10 @@ class CommandHandler:
             return 'Hierarchy parsed!'
         else:
             return 'Wrong path!'
+
+    def _cls(self):
+        os_system('cls' if os_name == 'nt' else 'clear')
+        return ''
 
 
 # command(args)

@@ -1,6 +1,11 @@
 import json
 from enum import Enum
 
+# TODO: move __str__ logic from scan_hierarchy to class instances
+# TODO: move comparison logic of Link to type definition and link it to ValueHolder comparison
+# TODO: move message routing to separate Log object (and add coloring to messages)
+# TODO: beautify command information
+# TODO: make a damn report
 
 # Value holder for link attributes
 class Link:
@@ -95,7 +100,7 @@ class NumericValueHolder(ValueHolder):
         self.add_value(value)
 
     def add_value(self, value):
-        self.value = value
+        self.value = int(value)
 
     def __cmp__(self, other):
         if not isinstance(other, NumericValueHolder) and self.name != other.name:
@@ -113,7 +118,7 @@ class StringValueHolder(ValueHolder):
         self.add_value(value)
 
     def add_value(self, value):
-        self.add_value = value
+        self.value = value
 
     def __cmp__(self, other):
         if not isinstance(other, StringValueHolder) and self.name != other.name:
@@ -187,34 +192,66 @@ class HClass:
         return False
 
     def create_instance(self, instance_name, atr_values):
-        # values : {atr_name : value (single value or list)}
-        # TODO Fix instance structure
-        inst_values = []
+        inst_values = {}
         for atr_name, value in atr_values.items():
             atr = self.get_atr_by_name(atr_name)
             if atr is None:
                 raise ValueError
-            inst_values.append(ValueHolderFactory.create_value_holder(atr, value))
+            value_holder = ValueHolderFactory.create_value_holder(atr, value)
+            inst_values[value_holder.name] = value_holder # pair of type and value
 
         self.instances[instance_name] = inst_values
 
 
-# Instance caches whole hierarchy, reads, saves and represents as string
-class Hierarchy:
-    name = "Hierarchy"
-    root_class = None
+class LogicOperation:
+    @staticmethod
+    def _is_more(v1, v2):
+        return v1 > v2
+    
+    @staticmethod
+    def _is_more_or_equal(v1, v2):
+        return v1 >= v2
+    
+    @staticmethod
+    def _is_equal(v1, v2):
+        return v1 == v2
 
-    def __init__(self, name=None):
-        self.name = self.name if name is None else name
+    @staticmethod
+    def _is_less_or_equal(v1, v2):
+        return v1 <= v2
+
+    @staticmethod
+    def _is_less(v1, v2):
+        return v1 < v2
+
+    @classmethod
+    def exec_operation(cls, v1, operation, v2) -> bool:
+        return cls._exec_operation[operation](v1, v2)
+
+
+LogicOperation._exec_operation = {
+        '>':    LogicOperation._is_more,
+        '>=':   LogicOperation._is_more_or_equal,
+        '=':    LogicOperation._is_equal,
+        '<=':   LogicOperation._is_less_or_equal,
+        '<':    LogicOperation._is_less
+}
+
+
+class HierarchyQuery:
+
+    def __init__(self, hierarchy):
+        self.hierarchy = hierarchy
 
     def find_class(self, class_name):
-        if not self.root_class:
+        hier = self.hierarchy
+        if not hier.root_class:
             return None
         # Breadth first search
         queue = []
         visited = {}
-        queue.append(self.root_class)
-        visited[self.root_class.name] = True
+        queue.append(hier.root_class)
+        visited[hier.root_class.name] = True
         while len(queue) != 0:
             v = queue.pop()
             if v.name == class_name:
@@ -223,8 +260,49 @@ class Hierarchy:
                 if sub.name not in visited.keys():
                     queue.append(sub)
                     visited[sub] = True
+    
+    def filter_classes(self, root_class_name, filter):
+        
+        hier = self.hierarchy
+        root = self.find_class(root_class_name)
 
-        return None
+        if root is None: return None
+
+        # Breadth first search
+        queue = []
+        visited = {}
+        filtered = []
+        queue.append(root)
+        visited[root.name] = True
+        while len(queue) != 0:
+            v = queue.pop()
+            if filter(v):
+                filtered.append(v)
+            for sub in v.subclasses:
+                if sub.name not in visited.keys():
+                    queue.append(sub)
+                    visited[sub] = True
+
+        return filtered
+
+    def filter_instances(self, classes, atr_filter, res):
+        for cls in classes:
+            for inst_name, attributes in cls.instances.items():
+                if atr_filter(attributes):
+                    res.append((inst_name, attributes))
+
+
+# Instance caches whole hierarchy, reads, saves and represents as string
+class Hierarchy:
+    name = "Hierarchy"
+    root_class = None
+
+    def __init__(self, name=None):
+        self._name = self.name if name is None else name
+        self._query = HierarchyQuery(self)
+
+    def find_class(self, class_name) -> HClass:
+        return self._query.find_class(class_name)
 
     def add_class(self, class_name, class_parent=None):
         if self.root_class is None:
@@ -233,28 +311,6 @@ class Hierarchy:
             parent_class = self.find_class(class_parent)
             if parent_class:
                 parent_class.subclasses.append(HClass(class_name))
-
-    def search_with_predicate(self, cur, atr_name, predicate):
-        # Breadth first search
-        queue = []
-        visited = {}
-        queue.append(cur)
-        visited[cur.name] = True
-        res = []
-        while len(queue) != 0:
-            v = queue.pop()
-            if v.has_atr(atr_name):
-                for inst_name, inst_values in cur.instances.items():
-                    for value_holder in inst_values:
-                        if value_holder.name == atr_name:
-                            if predicate(value_holder.value):
-                                res.append((inst_name, inst_values))
-            for sub in v.subclasses:
-                if sub.name not in visited.keys():
-                    queue.append(sub)
-                    visited[sub] = True
-
-        return None
 
     def _scan_hierarchy(self, cur, shift):
         sub = ''
@@ -299,7 +355,7 @@ class Hierarchy:
             sub += line + '\n'
         return sub
 
-    def to_str(self, with_instances=False):
+    def to_str(self, with_instances=False) -> str:
         if with_instances:
             return self._scan_hierarchy_with_instances(self.root_class, 0)[:-1]
         else:
@@ -344,25 +400,30 @@ class Hierarchy:
             if self.root_class:
                 del self.root_class  # clean tree before exiting
             raise err
+    
+    def query_to_str(self, query_result):
+        res = 'Query result:\n'
+        for inst in query_result:
+            values = list(map(lambda holder : holder.value, inst[1].values()))
+            res += '{}: {}\n'.format(inst[0], values)
+        return res
 
-    def query(self, cls_name, atr_name, relation, atr_value):
-        # Find root class for query
-        query_root = self.find_class(cls_name)
-        if not query_root:
-            raise ValueError
+    def query(self, cls_name, atr_name, relation, atr_reference) -> str:
 
-        # Form a predicate
-        def pred (x):
-            if relation == "=":
-                pass
-            elif relation == ">":
-                pass
-            elif relation == "<":
-                pass
-            elif relation == ">=":
-                pass
-            elif relation == "<=":
-                pass
+        try:
+            val = int(atr_reference)
+        except(ValueError):
+            val = atr_reference
 
-        # query_res = self.search_with_predicate(query_root, pred)
-        # return query_res
+        # Search for all classes with atr_name from query_root
+        filtered_classes = self._query.filter_classes(cls_name, lambda cls : cls.has_atr(atr_name))
+        # Filter instances of classes with predicate
+        filtered_instances = []
+        self._query.filter_instances(
+            filtered_classes,
+            lambda attributes: LogicOperation.exec_operation(attributes[atr_name].value, relation, val),
+            filtered_instances
+        )
+        # Form a string from all instances and return
+        str_res = self.query_to_str(filtered_instances)
+        return str_res
