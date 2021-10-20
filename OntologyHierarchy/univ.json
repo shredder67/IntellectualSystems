@@ -4,7 +4,7 @@
     {
       "Name": "ВУЗ",
       "Attributes": {},
-      "Parent": null,
+      "Parents": null,
       "Instances": []
     },
     {
@@ -17,7 +17,7 @@
           "type": "LINK_MULTIPLE"
         }
       },
-      "Parent": "ВУЗ",
+      "Parents": ["ВУЗ", "Преподавательский состав"],
       "Instances": []
     },
     {
@@ -27,19 +27,19 @@
           "type": "NUM_SINGLE"
         }
       },
-      "Parent": "ВУЗ",
+      "Parents": ["ВУЗ", "Преподавательский состав"],
       "Instances": []
     },
     {
       "Name": "Институт",
       "Attributes": {},
-      "Parent": "ВУЗ",
+      "Parents": ["ВУЗ"],
       "Instances": []
     },
     {
       "Name": "Кафедра",
       "Attributes": {},
-      "Parent": "Институт",
+      "Parents": ["Институт"],
       "Instances": []
     },
     {
@@ -49,13 +49,13 @@
           "type": "NUM_SINGLE"
         }
       },
-      "Parent": "Кафедра",
+      "Parents": ["Кафедра"],
       "Instances": []
     },
     {
       "Name": "Преподавательский состав",
       "Attributes": {},
-      "Parent": "Кафедра",
+      "Parents": ["Кафедра"],
       "Instances": []
     },
     {
@@ -71,7 +71,7 @@
           "type": "LINK_MULTIPLE"
         }
       },
-      "Parent": "Преподавательский состав",
+      "Parents": ["Преподавательский состав"],
       "Instances": []
     },
     {
@@ -87,7 +87,7 @@
           "type": "LINK_MULTIPLE"
         }
       },
-      "Parent": "Преподавательский состав",
+      "Parents": ["Преподавательский состав"],
       "Instances": []
     },
     {
@@ -100,7 +100,7 @@
           "type": "STR_SINGLE"
         }
       },    
-      "Parent": "Преподавательский состав",
+      "Parents": ["Преподавательский состав"],
       "Instances": []
     }
   ],

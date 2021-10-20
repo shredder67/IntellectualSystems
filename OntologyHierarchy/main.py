@@ -30,7 +30,7 @@ class CommandHandler:
         'info':         '() - prints all commands info',
         'create':       '(hierarchy_name) - creates a new hiearchy and loads it in memory',
         'print':        '() - prints the current hierarchy',
-        'add_cls':      '(name, super_class = None) - creates new class',
+        'add_cls':      '(name, super_class = None) - creates new class * TODO for multiple',
         'add_atr':      '(name, type) - adds attribute to class\ntype list:\n\tNUM_SINGLE - single number\n\t'
                         'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'
                         'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other'

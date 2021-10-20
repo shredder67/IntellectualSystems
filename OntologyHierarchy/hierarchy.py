@@ -1,5 +1,8 @@
 import json
 from enum import Enum
+from sys import addaudithook
+
+# TODO: Сделать множественное наследование класса (Parent -> Parents), для каждого родителя продублировать класс
 
 # Value holder for link attributes
 class Link:
@@ -164,6 +167,7 @@ class HClass:
         self.attributes: list = []
         self.subclasses: list = []
         self.instances: dict = {}
+        self.additional_parents = None
 
     def add_atr(self, name, str_type):
         if str_type not in AtrType.__dict__.keys():
@@ -277,6 +281,27 @@ class HierarchyQuery:
 
         return filtered
 
+    @classmethod
+    def filter_and_apply(cls, lambda_filter, lambda_action, root_class_name=None):
+        if root_class_name:
+            root = cls.find_class(root_class_name)
+        else:
+            root = cls.hierarchy.root_class
+
+        # Breadth first search
+        queue = []
+        visited = {}
+        queue.append(root)
+        visited[root.name] = True
+        while len(queue) != 0:
+            v = queue.pop()
+            if lambda_filter(v):
+                lambda_action(v)
+            for sub in v.subclasses:
+                if sub.name not in visited.keys():
+                    queue.append(sub)
+                    visited[sub] = True
+
     @staticmethod
     def filter_instances(classes, atr_filter, res):
         for cls in classes:
@@ -379,15 +404,29 @@ class Hierarchy:
                         cl.add_atr(name, batch["type"])
 
                     # add into hierarchy
-                    if self.root_class is None and classdata["Parent"] is None:
+                    if self.root_class is None and classdata["Parents"] is None:
                         self.root_class = cl
                     else:
-                        parent = self.find_class(classdata["Parent"])
+                        # inject as subclass for [0] parent
+                        parent = self.find_class(classdata["Parents"][0])
                         if parent is None:
                             del self.root_class
                             raise ValueError(cl.name + " has no parent in hierarchy!")
 
+                        cl.additional_parents = classdata["Parents"][1:]
                         parent.subclasses.append(cl)
+
+                # secondary subclasses injection
+                def add_to_parents(sub):
+                    for new_parent in sub.additional_parents:
+                        p = HierarchyQuery.find_class(new_parent)
+                        p.subclasses.append(sub)
+                    sub.additional_parents = None
+
+                HierarchyQuery.filter_and_apply(
+                    lambda some_class: some_class.additional_parents is not None,
+                    lambda_action=add_to_parents
+                )
 
                 for instance in instances_data:
                     cl = self.find_class(instance["ClassName"])
