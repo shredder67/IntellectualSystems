@@ -1,16 +1,9 @@
-# Program creates class hierarchy and instances, reads and saves it as JSON file.
+# Program creates class hierarchy and instances, reads it from JSON file.
 # Allows to perform query throw the "knowledge base" of instances
 # Instances have attributes of string, numerical and instance types
 # Type info() for command information
 
-# TODO:
-#   find request to hierarchy
-
-#   UPD1: check add_atr method for fix instructions, also add instance reading
-#   UPD2: reading works greatly, need to add instance reading
-#   UPD3: reworked Attribute instantiating, parsing works fine, need to test with instances
-
-
+# TODO: Fix RUNTIME instance creation (currently wrong input format, need to parse into dict like {atr_name : value})
 
 import signal
 import sys
@@ -44,8 +37,8 @@ class CommandHandler:
                         'class/classes',
         'query':        '(root_class_name, atr_name, relation (one of >=, >, =, <, <=), value)',
         'run_q':        '() - runs queries read stored in hierarchy (read from json)',
-        'inst':         '({ atr_name : atr_value }) - creates an instance of class with entered parameters'
-                        'NOTE: use like this: cls_name.inst(args)',
+        # 'inst':        '() - creates an instance of class with entered parameters'
+        #                'NOTE: use like this: cls_name.inst(args)',
         'print_inst':   '() - prints all instances in hierarchy',
         #  'save':         '(path) - saves hierarchy as json file',
         'open':         '(path) - opens exiting hierarchy (from json) and instances',
@@ -88,11 +81,11 @@ class CommandHandler:
         if not cls:
             mes = 'No such class in hierarchy!'
             return mes
-
         if command_name == 'add_atr':
             mes = self._add_atr(cls, args)
         elif command_name == 'inst':
             mes = self._inst(cls, args)
+        mes = "Something went wrong..."
         return mes
 
     def _info(self):
@@ -124,7 +117,9 @@ class CommandHandler:
     def _inst(self, cls, arg):
         # arg is value, value, value in defined order
         values = list(map(str.strip, arg.split(',')))
-        cls.create_instance(values)
+        if len(values) == 1:
+            values.append(None)
+        cls.create_instance(values[0], values[1:])
         return 'Instance created!'
 
     def _print(self):
@@ -179,6 +174,7 @@ while True:
             continue
         else:
             res = comHandler.handle(command, parsed_inp.group(2))
+
     else:
         parsed_inp = clsmethod_pattern.match(inp)
         if not parsed_inp:

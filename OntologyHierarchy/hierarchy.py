@@ -1,7 +1,6 @@
 import json
 from enum import Enum
 
-
 # Value holder for link attributes
 class Link:
     def __init__(self, inst_names):
@@ -187,12 +186,13 @@ class HClass:
 
     def create_instance(self, instance_name, atr_values):
         inst_values = {}
-        for atr_name, value in atr_values.items():
-            atr = self.get_atr_by_name(atr_name)
-            if atr is None:
-                raise ValueError
-            value_holder = ValueHolderFactory.create_value_holder(atr, value)
-            inst_values[value_holder.name] = value_holder  # pair of type and value
+        if atr_values:
+            for atr_name, value in atr_values.items():
+                atr = self.get_atr_by_name(atr_name)
+                if atr is None:
+                    raise ValueError
+                value_holder = ValueHolderFactory.create_value_holder(atr, value)
+                inst_values[value_holder.name] = value_holder  # pair of type and value
 
         self.instances[instance_name] = inst_values
 
