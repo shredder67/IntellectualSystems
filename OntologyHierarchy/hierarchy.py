@@ -1,35 +1,29 @@
 import json
 from enum import Enum
 
-# TODO: move __str__ logic from scan_hierarchy to class instances
-# TODO: move comparison logic of Link to type definition and link it to ValueHolder comparison
-# TODO: move message routing to separate Log object (and add coloring to messages)
-# TODO: beautify command information
-# TODO: make a damn report
 
 # Value holder for link attributes
 class Link:
-    def __init__(self, classes):
-        self.classes = classes
+    def __init__(self, inst_names):
+        self.inst_names = set(inst_names)
 
     def __eq__(self, other):
-        if not isinstance(other, Link):
-            return NotImplemented
+        if isinstance(other, str):
+            return other in self.inst_names
 
-        if len(other.classes) != len(self.classes):
+        if isinstance(other, list):
+            return set(other) == self.inst_names
+
+        if len(self.inst_names) != len(other.inst_names):
             return False
 
-        i = 0
-        while i < len(self.classes):
-            if self.classes[i] != other.classes[i]:
-                return False
-        return True
+        return self.inst_names == other.inst_names
 
     def __str__(self):
-        res = '['
-        for cls in self.classes:
-            res += ' ' + cls.name + ','
-        return res[:-1]
+        return str(self.inst_names)
+
+    def __repr__(self):
+        return str(self)
 
 
 class AtrType(Enum):
@@ -198,7 +192,7 @@ class HClass:
             if atr is None:
                 raise ValueError
             value_holder = ValueHolderFactory.create_value_holder(atr, value)
-            inst_values[value_holder.name] = value_holder # pair of type and value
+            inst_values[value_holder.name] = value_holder  # pair of type and value
 
         self.instances[instance_name] = inst_values
 
@@ -239,19 +233,17 @@ LogicOperation._exec_operation = {
 
 
 class HierarchyQuery:
+    hierarchy = None
 
-    def __init__(self, hierarchy):
-        self.hierarchy = hierarchy
-
-    def find_class(self, class_name):
-        hier = self.hierarchy
-        if not hier.root_class:
+    @classmethod
+    def find_class(cls, class_name):
+        if not cls.hierarchy.root_class:
             return None
         # Breadth first search
         queue = []
         visited = {}
-        queue.append(hier.root_class)
-        visited[hier.root_class.name] = True
+        queue.append(cls.hierarchy.root_class)
+        visited[cls.hierarchy.root_class.name] = True
         while len(queue) != 0:
             v = queue.pop()
             if v.name == class_name:
@@ -260,13 +252,13 @@ class HierarchyQuery:
                 if sub.name not in visited.keys():
                     queue.append(sub)
                     visited[sub] = True
-    
-    def filter_classes(self, root_class_name, filter):
-        
-        hier = self.hierarchy
-        root = self.find_class(root_class_name)
 
-        if root is None: return None
+    @classmethod
+    def filter_classes(cls, lambda_filter, root_class_name=None):
+        if root_class_name:
+            root = cls.find_class(root_class_name)
+        else:
+            root = cls.hierarchy.root_class
 
         # Breadth first search
         queue = []
@@ -276,7 +268,7 @@ class HierarchyQuery:
         visited[root.name] = True
         while len(queue) != 0:
             v = queue.pop()
-            if filter(v):
+            if lambda_filter(v):
                 filtered.append(v)
             for sub in v.subclasses:
                 if sub.name not in visited.keys():
@@ -285,11 +277,20 @@ class HierarchyQuery:
 
         return filtered
 
-    def filter_instances(self, classes, atr_filter, res):
+    @staticmethod
+    def filter_instances(classes, atr_filter, res):
         for cls in classes:
             for inst_name, attributes in cls.instances.items():
                 if atr_filter(attributes):
-                    res.append((inst_name, attributes))
+                    res.append((inst_name, cls.name, attributes))
+
+    @staticmethod
+    def query_to_str(query_result):
+        res = 'Query result:\n'
+        for inst in query_result:
+            values = list(map(lambda holder: holder.value, inst[2].values()))
+            res += '{} : {}\n{}\n'.format(inst[0], inst[1], values)
+        return res
 
 
 # Instance caches whole hierarchy, reads, saves and represents as string
@@ -299,10 +300,11 @@ class Hierarchy:
 
     def __init__(self, name=None):
         self._name = self.name if name is None else name
-        self._query = HierarchyQuery(self)
+        self._queries = None
+        HierarchyQuery.hierarchy = self
 
     def find_class(self, class_name) -> HClass:
-        return self._query.find_class(class_name)
+        return HierarchyQuery.find_class(class_name)
 
     def add_class(self, class_name, class_parent=None):
         if self.root_class is None:
@@ -396,34 +398,39 @@ class Hierarchy:
                     del inst_values["InstanceName"]
                     cl.create_instance(inst_name, inst_values)
 
+                if "Queries" in parsed_json:
+                    self._queries = parsed_json["Queries"]
+
         except ValueError as err:
             if self.root_class:
                 del self.root_class  # clean tree before exiting
             raise err
-    
-    def query_to_str(self, query_result):
-        res = 'Query result:\n'
-        for inst in query_result:
-            values = list(map(lambda holder : holder.value, inst[1].values()))
-            res += '{}: {}\n'.format(inst[0], values)
-        return res
 
     def query(self, cls_name, atr_name, relation, atr_reference) -> str:
-
         try:
             val = int(atr_reference)
-        except(ValueError):
+        except ValueError:
             val = atr_reference
 
         # Search for all classes with atr_name from query_root
-        filtered_classes = self._query.filter_classes(cls_name, lambda cls : cls.has_atr(atr_name))
+        filtered_classes = HierarchyQuery.filter_classes(root_class_name=cls_name,
+                                                         lambda_filter=lambda cls: cls.has_atr(atr_name))
         # Filter instances of classes with predicate
         filtered_instances = []
-        self._query.filter_instances(
+        HierarchyQuery.filter_instances(
             filtered_classes,
             lambda attributes: LogicOperation.exec_operation(attributes[atr_name].value, relation, val),
             filtered_instances
         )
         # Form a string from all instances and return
-        str_res = self.query_to_str(filtered_instances)
-        return str_res
+        return HierarchyQuery.query_to_str(filtered_instances)
+
+    def run_queries(self):
+        res = ''
+        if self._queries:
+            for _query in self._queries:
+                res += self.query(_query["In"], _query["Attribute"], _query["Relation"], _query["Value"]) + '\n\n'
+        else:
+            res = 'No queries stored!  '
+        return res[:-2]
+

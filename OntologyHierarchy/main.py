@@ -42,27 +42,28 @@ class CommandHandler:
                         'NUM_MULTIPLE - number array\n\tSTR_SINGLE - single string\n\tSTR_MULTIPLE - string array'
                         'LINK_SINGLE - single link to other class/classes\n\tLINK_MULTIPLE - multiple links to other'
                         'class/classes',
-        'query':        '(root_class_name, atr_name, relation, value)',
+        'query':        '(root_class_name, atr_name, relation (one of >=, >, =, <, <=), value)',
+        'run_q':        '() - runs queries read stored in hierarchy (read from json)',
         'inst':         '({ atr_name : atr_value }) - creates an instance of class with entered parameters'
                         'NOTE: use like this: cls_name.inst(args)',
         'print_inst':   '() - prints all instances in hierarchy',
-        'save':         '(path) - saves hierarchy as json file',
+        #  'save':         '(path) - saves hierarchy as json file',
         'open':         '(path) - opens exiting hierarchy (from json) and instances',
-        'cls' :         'cleans the screen'
+        'cls':         '() - cleans the screen'
     })
     commands = commands_desc.keys()
 
     # Handles function calls
     def handle(self, command_name, arg):
-        mes = 'Nothing happened...'
+        mes = None
         if command_name == 'info':
-            mes = self._info()
+            self._info()
         elif command_name == 'create':
-            mes = self._create(arg)
+            self._create(arg)
         elif command_name == 'open':
             mes = self._open(arg)
         elif command_name == 'cls':
-            mes = self._cls()
+            self._cls()
 
         elif self.HierarchyObject is None:
             mes = "Hierarchy has not been created/opened yet!"
@@ -70,19 +71,19 @@ class CommandHandler:
         elif command_name == 'add_cls':
             mes = self._add_class(arg)
         elif command_name == 'print':
-            mes = self._print()
+            self._print()
         elif command_name == 'print_inst':
-            mes = self._print_inst()
+            self._print_inst()
         elif command_name == 'query':
-            mes = self._query(arg)
+            self._query(arg)
+        elif command_name == 'run_q':
+            self._run_queries()
         elif command_name == 'save':
-            mes = self._save(arg)
+            self._save(arg)
         return mes
 
-    # Handles fuction calls related to classes in hierarchy in format cls_name.command(args)
+    # Handles function calls related to classes in hierarchy in format cls_name.command(args)
     def handle_cls(self, cls_name, command_name, args):
-        mes = 'Nothing happend...'
-
         cls = self.HierarchyObject.find_class(cls_name)
         if not cls:
             mes = 'No such class in hierarchy!'
@@ -97,14 +98,10 @@ class CommandHandler:
     def _info(self):
         for key in self.commands_desc:
             print(key + self.commands_desc[key])
-        return ''
 
     def _create(self, arg):
         self.HierarchyObject = Hierarchy(arg)
-        if (self.HierarchyObject):
-            return 'Hierarchy created!'
-        else:
-            return 'Hierarchy wasn\'t created, smth went wrong'
+        return 'Hierarchy created!'
 
     def _add_class(self, arg):
         args = arg.split(',')
@@ -131,23 +128,22 @@ class CommandHandler:
         return 'Instance created!'
 
     def _print(self):
-        print('\n' + self.HierarchyObject.to_str())
-        return ''
+        print(self.HierarchyObject.to_str())
 
     def _print_inst(self):
         print(self.HierarchyObject.to_str(True))
-        return ''
 
     def _save(self, arg):
-        return ''
+        pass
 
     def _query(self, arg):
         values = list(map(str.strip, arg.split(',')))
         res = self.HierarchyObject.query(*values)
         print(res)
-        return ''
-        
 
+    def _run_queries(self):
+        res = self.HierarchyObject.run_queries()
+        print(res)
 
     def _open(self, arg):
         if path.exists(arg):
@@ -159,14 +155,13 @@ class CommandHandler:
 
     def _cls(self):
         os_system('cls' if os_name == 'nt' else 'clear')
-        return ''
 
 
 # command(args)
 # args : arg1, arg2, ..., argn or {... key : val ...}
 comHandler = CommandHandler()
-command_pattern = re.compile('^([A-z]*)\(([^)]*)\)$')
-clsmethod_pattern = re.compile('^([A-Za-z0-9А-Яа-я]*).([A-zА-Яа-я]*)\(([^)]*)\)$')
+command_pattern = re.compile('^([A-Za-z0-9А-Яа-я_]*)\(([^)]*)\)$')
+clsmethod_pattern = re.compile('^([A-Za-z0-9А-Яа-я_]*).([A-zА-Яа-я]*)\(([^)]*)\)$')
 
 # Input loop
 while True:
@@ -181,9 +176,9 @@ while True:
         command = parsed_inp.group(1)
         if command not in comHandler.commands:
             print('\nNo such function (write info() for functions list)\n')
+            continue
         else:
             res = comHandler.handle(command, parsed_inp.group(2))
-            print(res + '\n')
     else:
         parsed_inp = clsmethod_pattern.match(inp)
         if not parsed_inp:
@@ -194,6 +189,8 @@ while True:
         arg = parsed_inp.group(3)
         if command not in comHandler.commands:
             print('\nNo such function (write info() for functions list)\n')
+            continue
         else:
             res = comHandler.handle_cls(cls_name, command, arg)
-            print(res + '\n')
+    if res is not None:
+        print(res + '\n')
