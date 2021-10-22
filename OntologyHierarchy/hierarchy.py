@@ -1,8 +1,6 @@
 import json
 from enum import Enum
-from sys import addaudithook
 
-# TODO: Сделать множественное наследование класса (Parent -> Parents), для каждого родителя продублировать класс
 
 # Value holder for link attributes
 class Link:
