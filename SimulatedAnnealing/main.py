@@ -2,9 +2,12 @@
 # Датасет взят здесь http://people.brunel.ac.uk/~mastjjb/jeb/orlib/assigninfo.html
 
 
+from argparse import ArgumentParser
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+import data_service as ds 
 
 
 # Целевая функция, которую нужно минимизировать
@@ -25,7 +28,10 @@ def h(d_E, t):
 
 
 def main():
-    print("Hello world!")
+    path, ans = ds.get_parsed_args()
+    data = pd.DataFrame.from_records([row for row in ds.read_data_by_rows(path)])
+    print(data)
+    
 
 if __name__ == '__main__':
     main()
