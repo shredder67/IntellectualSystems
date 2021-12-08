@@ -3,7 +3,7 @@
 
 
 import pandas as pd
-from math import exp
+from math import exp, log
 from random import random, randint, shuffle
 
 import data_service as ds 
@@ -19,8 +19,8 @@ def E(assignments, costs) -> float:
 
 # Функция понижения температуры
 def T(t):
-    k = 0.999
-    return k * t
+    k = 0.5
+    return t / (1 + k * t)
 
 
 # Функция генерации следующего состояния системы
@@ -55,11 +55,12 @@ def main():
     f = E(cur_solution, costs)
 
     f_global_min = f
-    temp = 100_000
-    i = 0
-    while temp > 0.5:
+    temp = 100_000_000
+    i = 1
+    while temp > 0.01:
         if f_global_min > f:
             f_global_min = f
+            print(f_global_min) 
 
         new_solution = G(cur_solution, temp)
         f_new = E(new_solution, costs)
@@ -68,6 +69,8 @@ def main():
             cur_solution = new_solution
             f = f_new
 
+        if i % 15 == 0:
+            temp = T(temp)
         i += 1
 
     print(f_global_min)
