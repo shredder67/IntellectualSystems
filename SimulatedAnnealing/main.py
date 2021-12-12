@@ -30,10 +30,12 @@ def h(d_E, t) -> float:
     return exp(-d_E/t)
 
 
+# Проверка перехода в новое состояние
 def check_prob(v) -> bool:
     return random() < v
 
 
+# Метод отжига
 def anneal():
     path, ans = ds.get_parsed_args()
     costs = pd.DataFrame.from_records([row for row in ds.read_data_by_rows(path)])
@@ -49,7 +51,7 @@ def anneal():
     temp = max_temp
     k = 1
     y_values = []
-    while temp > 0.01:
+    while temp > 0.1:
         if f_global_min > f:
             f_global_min = f
 
@@ -72,14 +74,17 @@ def anneal():
         temp = T(temp)
         k += 1
 
+    print(k)
     print(f_global_min)
     if ans is not None:
         print("Правильный ответ:", ans)
 
     return list(range(k - 1)), y_values
 
+
 def main():
-    plt.plot(anneal())
+    x,y = anneal()
+    plt.plot(x, y)
     plt.show()
 
 
